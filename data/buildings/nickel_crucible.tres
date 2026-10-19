@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"nickel_crucible"
+display_name = "Nickel Crucible"
+category = &"module"
+sort_order = 57
+description = "Lets an Alloy Forge take raw nickel ore, skipping the Matte Smelter."
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+ports = []
+recipes = Array[StringName]([])
+build_cost = {
+&"steel": 20,
+&"ferrocrete": 10,
+&"machine_parts": 5
+}
+workers = {}
+buffer_capacity = 8
+colour = Color(0.6392, 0.6784, 0.5490, 1)
+height = 1.6
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 0.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false
+module_slots = 0
+module_hosts = Array[StringName]([&"alloy_forge"])
+module_effects = {}
+module_upkeep = {}
+module_recipes = Array[StringName]([&"forge_alloy_integrated"])
+is_depot = false
+station_capacity = 0.0

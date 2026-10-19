@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"servitor_bay"
+display_name = "Servitor Bay"
+category = &"module"
+sort_order = 51
+description = "Servitors replace 40% of the host's workers. Needs machine parts."
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+ports = []
+recipes = Array[StringName]([])
+build_cost = {
+&"steel": 20,
+&"machine_parts": 5
+}
+workers = {}
+buffer_capacity = 8
+colour = Color(0.4157, 0.4157, 0.4157, 1)
+height = 1.0
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 0.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false
+module_slots = 0
+module_hosts = Array[StringName]([&"industry", &"extraction", &"civic"])
+module_effects = {
+&"workers": 0.6
+}
+module_upkeep = {
+&"machine_parts": 0.5
+}
+module_recipes = Array[StringName]([])
+is_depot = false
+station_capacity = 0.0

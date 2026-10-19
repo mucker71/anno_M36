@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"polymer_still"
+display_name = "Polymer Still"
+category = &"module"
+sort_order = 56
+description = "Lets a Plasteel Foundry use crude promethium and coal instead of polymer."
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+ports = []
+recipes = Array[StringName]([])
+build_cost = {
+&"steel": 20,
+&"ferrocrete": 10
+}
+workers = {}
+buffer_capacity = 8
+colour = Color(0.2275, 0.2902, 0.4157, 1)
+height = 1.8
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 0.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false
+module_slots = 0
+module_hosts = Array[StringName]([&"plasteel_foundry"])
+module_effects = {}
+module_upkeep = {}
+module_recipes = Array[StringName]([&"bond_plasteel_integrated"])
+is_depot = false
+station_capacity = 0.0

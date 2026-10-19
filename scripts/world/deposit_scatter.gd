@@ -18,8 +18,8 @@ const SPECS := [
 ]
 
 const HQ_KEEP_CLEAR := 7.0
-const NEAR_MIN := 10.0
-const NEAR_MAX := 28.0
+const NEAR_MIN := 9.0
+const NEAR_MAX := 15.0
 const FAR_MIN := 22.0
 
 

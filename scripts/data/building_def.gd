@@ -47,6 +47,24 @@ enum PortKind { INPUT, OUTPUT }
 ## Citizens covered while the service is supplied.
 @export var service_capacity: int = 0
 
+@export_group("Transport")
+## Holds a district stockpile and anchors road and walkway access.
+@export var is_depot: bool = false
+## Freight units per second a cargo station can load onto rail.
+@export var station_capacity: float = 0.0
+
+@export_group("Modules")
+## How many modules this building can host.
+@export var module_slots: int = 0
+## For modules: host categories or building ids this module attaches to.
+@export var module_hosts: Array[StringName] = []
+## For modules: multipliers on the host. Keys: speed, output, decay, workers, buffer.
+@export var module_effects: Dictionary = {}
+## For modules: item -> units per minute from the district stockpile.
+@export var module_upkeep: Dictionary = {}
+## For modules: extra recipes the host can select while attached.
+@export var module_recipes: Array[StringName] = []
+
 @export_group("Visual")
 @export var colour: Color = Color.GRAY
 @export var height: float = 1.0
@@ -62,6 +80,20 @@ func size() -> Vector2i:
 
 func is_housing() -> bool:
 	return housing_caste != &""
+
+
+func is_module() -> bool:
+	return category == &"module"
+
+
+func is_station() -> bool:
+	return station_capacity > 0.0
+
+
+## True if this module may attach to the given host.
+func accepts_host(host: BuildingDef) -> bool:
+	return is_module() and host.module_slots > 0 and (
+		module_hosts.has(host.id) or module_hosts.has(host.category))
 
 
 func total_workers() -> int:

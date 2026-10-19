@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"forge_alloy_integrated"
+display_name = "Forge Alloy (onsite crucible)"
+inputs = {
+&"iron_ore": 2,
+&"coal": 2,
+&"nickel_ore": 1
+}
+outputs = {
+&"steel_alloy": 1
+}
+duration = 5.0
+deposit = &""

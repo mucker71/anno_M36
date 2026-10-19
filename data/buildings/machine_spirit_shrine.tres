@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"machine_spirit_shrine"
+display_name = "Machine-Spirit Shrine"
+category = &"module"
+sort_order = 50
+description = "Placates the host's machine spirit: decay x0.4. Burns sacred unguents."
+cells = Array[Vector2i]([Vector2i(0, 0)])
+ports = []
+recipes = Array[StringName]([])
+build_cost = {
+&"steel": 5,
+&"glass": 5
+}
+workers = {}
+buffer_capacity = 8
+colour = Color(0.7882, 0.6275, 0.2275, 1)
+height = 1.6
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 0.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false
+module_slots = 0
+module_hosts = Array[StringName]([&"industry", &"extraction"])
+module_effects = {
+&"decay": 0.4
+}
+module_upkeep = {
+&"sacred_unguents": 0.5
+}
+module_recipes = Array[StringName]([])
+is_depot = false
+station_capacity = 0.0

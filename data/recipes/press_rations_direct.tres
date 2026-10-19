@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"press_rations_direct"
+display_name = "Press Rations (onsite mill)"
+inputs = {
+&"fungal_biomass": 3,
+&"purified_water": 1
+}
+outputs = {
+&"ration_bricks": 2
+}
+duration = 4.0
+deposit = &""

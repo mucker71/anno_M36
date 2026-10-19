@@ -152,6 +152,11 @@ RECIPES = [
     ("cast_icons_steel", "Cast Icons (steel)", {"steel": 1}, {"devotional_icons": 2}, 4.0, ""),
     ("issue_enforcer_kit", "Issue Enforcer Kits", {"steel": 1, "polymer": 1, "power_cells": 1}, {"enforcer_kit": 1}, 8.0, ""),
 
+    # Module-unlocked recipes: an onsite processor skips a whole production step
+    ("press_rations_direct", "Press Rations (onsite mill)", {"fungal_biomass": 3, "purified_water": 1}, {"ration_bricks": 2}, 4.0, ""),
+    ("bond_plasteel_integrated", "Bond Plasteel (onsite still)", {"steel": 2, "crude_promethium": 1, "coal": 1}, {"plasteel": 1}, 5.0, ""),
+    ("forge_alloy_integrated", "Forge Alloy (onsite crucible)", {"iron_ore": 2, "coal": 2, "nickel_ore": 1}, {"steel_alloy": 1}, 5.0, ""),
+
     # Services (consume goods, produce district coverage instead of items)
     ("hold_mass", "Hold Mass", {"devotional_icons": 1}, {}, 30.0, ""),
     ("patrol_district", "Patrol District", {"enforcer_kit": 1}, {}, 60.0, ""),
@@ -215,9 +220,14 @@ def default_ports(cells, inputs: bool, outputs: bool):
 
 # ---------------------------------------------------------------------------
 # Buildings
-# category: core, logistics, housing, extraction, industry, civic, service
+# category: core, transport, housing, extraction, industry, civic, service, module
 # workers: {caste: count}
 # ports: None = default (in on west, out on east); [] = no ports; or explicit list
+# module_slots: None = automatic from size and category (see auto_slots)
+# Modules: module_hosts lists host categories or building ids. module_effects
+# multiply the host: speed, output, decay, workers, buffer. module_upkeep is
+# units per minute from the district stockpile; unpaid upkeep switches the
+# module off. module_recipes are extra recipes the host can then select.
 # ---------------------------------------------------------------------------
 B = []
 
@@ -226,8 +236,12 @@ def building(id, name, category, shape, recipes=(), cost=None, workers=None,
              ports=None, colour="#777777", height=1.0, buffer=8,
              housing_caste="", housing_capacity=0, upgrade_to="", upgrade_cost=None,
              logistics=0.0, decay=1.0, service_kind="", service_capacity=0,
-             needs_deposit=False, description=""):
+             needs_deposit=False, description="", module_slots=None, module_hosts=(),
+             module_effects=None, module_upkeep=None, module_recipes=(), is_depot=False,
+             station_capacity=0.0):
     cells = shape_cells(shape)
+    if module_slots is None:
+        module_slots = auto_slots(category, len(cells))
     if ports is None:
         has_inputs = any(r for r in recipes if RECIPE_BY_ID[r][2])
         has_outputs = any(r for r in recipes if RECIPE_BY_ID[r][3])
@@ -240,21 +254,35 @@ def building(id, name, category, shape, recipes=(), cost=None, workers=None,
         upgrade_to=upgrade_to, upgrade_cost=upgrade_cost or {},
         logistics=logistics, decay=decay, service_kind=service_kind,
         service_capacity=service_capacity, needs_deposit=needs_deposit,
-        description=description,
+        description=description, module_slots=module_slots, module_hosts=list(module_hosts),
+        module_effects=module_effects or {}, module_upkeep=module_upkeep or {},
+        module_recipes=list(module_recipes), is_depot=is_depot,
+        station_capacity=station_capacity,
     ))
+
+
+def auto_slots(category: str, cells: int) -> int:
+    """Production buildings get module slots by size; everything else none."""
+    if category not in ("industry", "extraction", "civic"):
+        return 0
+    return 1 if cells <= 2 else (2 if cells <= 5 else 3)
 
 
 RECIPE_BY_ID = {r[0]: r for r in RECIPES}
 
-# Core and logistics
+# Core and transport
 building("administratum_bastion", "Administratum Bastion", "core", "3x3",
          cost={}, workers={}, ports=[], colour="#4a3f5a", height=3.0,
-         logistics=12.0, decay=0.0,
-         description="Seat of the planetary governor's office. Holds the hive stockpile and sends the tithe.")
-building("cargo_depot", "Cargo Depot", "logistics", "2x2",
-         cost={"steel": 15, "ferrocrete": 10}, workers={"scribe": 10}, ports=[],
-         colour="#5a5a3f", height=1.2, logistics=6.0,
-         description="Raises logistics throughput. Stand-in for the cargo rail network.")
+         logistics=12.0, decay=0.0, is_depot=True,
+         description="Seat of the governor's office. Acts as its district's depot. The tithe is collected from this district's stockpile.")
+building("district_depot", "District Depot", "transport", "2x2",
+         cost={"steel": 15, "ferrocrete": 10}, workers={"menial": 10}, ports=[],
+         colour="#5a5a3f", height=1.2, logistics=6.0, is_depot=True, decay=0.5,
+         description="Holds a district's stockpile and adds 6/s haulage. Buildings trade with it over roads; housing shops at it over walkways or roads.")
+building("cargo_station", "Cargo Station", "transport", "3x1",
+         cost={"steel": 30, "ferrocrete": 20}, workers={"menial": 15}, ports=[],
+         colour="#4a4a5a", height=1.4, station_capacity=12.0, decay=0.5,
+         description="Loads freight trains. Place next to cargo rail and connect to the district depot by road. Districts with stations on the same rail line trade at 12/s per station.")
 
 # Housing: upgrades keep the same footprint (a slum becomes a block of flats)
 building("slum_stack", "Slum Stack", "housing", "2x2", ports=[],
@@ -428,6 +456,44 @@ building("enforcer_armoury", "Enforcer Armoury", "civic", "2x2",
          recipes=["issue_enforcer_kit"], cost={"steel": 30, "ferrocrete": 20},
          workers={"hiver": 15}, colour="#1a1a2a", height=1.6)
 
+# Modules: placed touching a host, they use up space next to it (and can
+# block its ports) in exchange for a bonus or an extra recipe.
+building("machine_spirit_shrine", "Machine-Spirit Shrine", "module", "1x1", ports=[],
+         cost={"steel": 5, "glass": 5}, colour="#c9a03a", height=1.6, decay=0.0,
+         module_hosts=["industry", "extraction"], module_effects={"decay": 0.4},
+         module_upkeep={"sacred_unguents": 0.5},
+         description="Placates the host's machine spirit: decay x0.4. Burns sacred unguents.")
+building("servitor_bay", "Servitor Bay", "module", "1x2", ports=[],
+         cost={"steel": 20, "machine_parts": 5}, colour="#6a6a6a", height=1.0, decay=0.0,
+         module_hosts=["industry", "extraction", "civic"], module_effects={"workers": 0.6},
+         module_upkeep={"machine_parts": 0.5},
+         description="Servitors replace 40% of the host's workers. Needs machine parts.")
+building("overclock_coils", "Overclock Coils", "module", "1x1", ports=[],
+         cost={"steel": 15, "copper_wire": 10}, colour="#3a6ab3", height=1.8, decay=0.0,
+         module_hosts=["industry"], module_effects={"speed": 1.3, "decay": 2.0},
+         module_upkeep={"power_cells": 0.5},
+         description="Speed x1.3, decay x2. Drinks power cells.")
+building("deep_bore_drill", "Deep Bore Drill", "module", "1x2", ports=[],
+         cost={"steel": 25, "machine_parts": 5}, colour="#5a4030", height=2.2, decay=0.0,
+         module_hosts=["deep_ore_mine", "open_quarry"], module_effects={"output": 1.5, "decay": 1.5},
+         description="Mine output x1.5. Empties the deposit faster.")
+building("storage_annex", "Storage Annex", "module", "1x2", ports=[],
+         cost={"steel": 10, "ferrocrete": 10}, colour="#5a5a4a", height=1.0, decay=0.0,
+         module_hosts=["industry", "extraction", "civic"], module_effects={"buffer": 2.0},
+         description="Doubles the host's buffers, so it rides out supply gaps.")
+building("fungal_mill", "Fungal Mill", "module", "1x2", ports=[],
+         cost={"steel": 10, "ferrocrete": 5}, colour="#6a7a3a", height=1.2, decay=0.0,
+         module_hosts=["ration_press"], module_recipes=["press_rations_direct"],
+         description="Lets a Ration Press work raw biomass, skipping the Slurry Vat.")
+building("polymer_still", "Polymer Still", "module", "2x1", ports=[],
+         cost={"steel": 20, "ferrocrete": 10}, colour="#3a4a6a", height=1.8, decay=0.0,
+         module_hosts=["plasteel_foundry"], module_recipes=["bond_plasteel_integrated"],
+         description="Lets a Plasteel Foundry use crude promethium and coal instead of polymer.")
+building("nickel_crucible", "Nickel Crucible", "module", "1x2", ports=[],
+         cost={"steel": 20, "ferrocrete": 10, "machine_parts": 5}, colour="#a3ad8c", height=1.6, decay=0.0,
+         module_hosts=["alloy_forge"], module_recipes=["forge_alloy_integrated"],
+         description="Lets an Alloy Forge take raw nickel ore, skipping the Matte Smelter.")
+
 # Services: the Fervour and Order levers (Comfort comes from caste comfort needs)
 building("shrine", "Shrine", "service", "1x1",
          recipes=["hold_mass"], cost={"steel": 5, "ferrocrete": 10}, ports=[],
@@ -554,6 +620,15 @@ def write_buildings(out: str) -> None:
         text += f"service_kind = {gd_sname(b['service_kind'])}\n"
         text += f"service_capacity = {b['service_capacity']}\n"
         text += f"needs_deposit = {'true' if b['needs_deposit'] else 'false'}\n"
+        text += f"module_slots = {b['module_slots']}\n"
+        hosts = ", ".join(gd_sname(h) for h in b["module_hosts"])
+        text += f"module_hosts = Array[StringName]([{hosts}])\n"
+        text += f"module_effects = {gd_dict(b['module_effects'], gd_num)}\n"
+        text += f"module_upkeep = {gd_dict(b['module_upkeep'], gd_num)}\n"
+        mrec = ", ".join(gd_sname(r) for r in b["module_recipes"])
+        text += f"module_recipes = Array[StringName]([{mrec}])\n"
+        text += f"is_depot = {'true' if b['is_depot'] else 'false'}\n"
+        text += f"station_capacity = {float(b['station_capacity'])!r}\n"
         write(os.path.join(out, f"{b['id']}.tres"), text)
 
 
@@ -587,6 +662,18 @@ def check() -> None:
             assert (x, y) in cellset, f"{b['id']} port off footprint at {(x, y)}"
             dx, dy = SIDE[s]
             assert (x + dx, y + dy) not in cellset, f"{b['id']} port at {(x, y)} faces inward"
+    categories = {b["category"] for b in B}
+    for b in B:
+        for h in b["module_hosts"]:
+            assert h in building_ids or h in categories, f"module {b['id']} unknown host {h}"
+        for r in b["module_recipes"]:
+            assert r in RECIPE_BY_ID, f"module {b['id']} unknown recipe {r}"
+        for k in b["module_upkeep"]:
+            assert k in item_ids, f"module {b['id']} unknown upkeep item {k}"
+        for k in b["module_effects"]:
+            assert k in ("speed", "output", "decay", "workers", "buffer"), f"module {b['id']} bad effect {k}"
+        if b["category"] == "module":
+            assert b["module_hosts"], f"module {b['id']} has no hosts"
     # every item is produced somewhere (raws by extraction)
     produced = {k for r in RECIPES for k in r[3]}
     missing = item_ids - produced

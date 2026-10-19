@@ -17,6 +17,7 @@ const DEFAULTS := {
 	&"speed_1": [KEY_1],
 	&"speed_2": [KEY_2],
 	&"speed_3": [KEY_3],
+	&"toggle_districts": [KEY_TAB],
 }
 
 

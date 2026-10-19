@@ -35,14 +35,14 @@ func advance(delta: float) -> void:
 		_start_cycle()
 
 
-## Takes what it can from the stockpile and adjusts favour.
+## Takes what it can from the Bastion district's stockpile and adjusts favour.
 func resolve() -> void:
 	var delivered := {}
 	var total_owed := 0
 	var total_given := 0
 	for item in quota:
 		var owed := int(quota[item])
-		var given := economy.take(item, owed)
+		var given := economy.tithe_take(item, owed)
 		delivered[item] = given
 		total_owed += owed
 		total_given += given
@@ -57,6 +57,7 @@ func _start_cycle() -> void:
 	cycle += 1
 	time_left = CYCLE_LENGTH
 	quota = _make_quota(cycle)
+	economy.tithe_quota = quota
 	cycle_started.emit(cycle, quota.duplicate())
 
 

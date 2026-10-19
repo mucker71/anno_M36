@@ -45,9 +45,11 @@ func _ready() -> void:
 # --- Mode switching -------------------------------------------------------------
 
 func begin_build(def: BuildingDef) -> void:
-	_set_mode(Mode.BUILD)
+	# Set the building before switching mode: _set_mode emits mode_changed and
+	# listeners (the HUD) read build_def straight away.
 	build_def = def
 	build_rotation = 0
+	_set_mode(Mode.BUILD)
 	build_mode_changed.emit(def)
 
 

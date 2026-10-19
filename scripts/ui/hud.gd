@@ -444,7 +444,10 @@ func _refresh_hint() -> void:
 	var p := world.placement
 	var text := ""
 	var colour := TEXT_DIM
-	match p.mode:
+	var mode := p.mode
+	if mode == PlacementController.Mode.BUILD and p.build_def == null:
+		mode = PlacementController.Mode.SELECT
+	match mode:
 		PlacementController.Mode.SELECT:
 			text = "WASD pan · wheel zoom · Q/E rotate view · Tab districts · Space pause · 1/2/3 speed"
 		PlacementController.Mode.BUILD:

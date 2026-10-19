@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"charge_cells"
+display_name = "Charge Power Cells"
+inputs = {
+&"rare_earths": 1,
+&"copper_wire": 2,
+&"promethium_fuel": 1
+}
+outputs = {
+&"power_cells": 2
+}
+duration = 5.0
+deposit = &""

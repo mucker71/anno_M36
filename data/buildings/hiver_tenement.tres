@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"hiver_tenement"
+display_name = "Hiver Tenement"
+category = &"housing"
+sort_order = 5
+description = ""
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(0, 2), Vector2i(1, 2)])
+ports = []
+recipes = Array[StringName]([])
+build_cost = {
+&"steel": 15,
+&"ferrocrete": 20,
+&"glass": 5
+}
+workers = {}
+buffer_capacity = 8
+colour = Color(0.2902, 0.3529, 0.4157, 1)
+height = 1.5
+housing_caste = &"hiver"
+housing_capacity = 60
+upgrade_to = &"hiver_block"
+upgrade_cost = {
+&"ferrocrete": 30,
+&"glass": 10,
+&"steel": 10
+}
+logistics_capacity = 0.0
+decay_per_minute = 0.5
+service_kind = &""
+service_capacity = 0
+needs_deposit = false

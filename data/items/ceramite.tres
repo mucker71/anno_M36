@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"ceramite"
+display_name = "Ceramite"
+tier = 2
+category = &"construction"
+tithe_base = 0
+sort_order = 30
+colour = Color(0.8784, 0.8667, 0.8157, 1)
+description = "Heat-proof ceramic plate for advanced buildings."

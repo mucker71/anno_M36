@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"smelt_steel"
+display_name = "Smelt Steel (basic)"
+inputs = {
+&"iron_ore": 2,
+&"coal": 1
+}
+outputs = {
+&"steel": 1
+}
+duration = 4.0
+deposit = &""

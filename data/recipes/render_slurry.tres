@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"render_slurry"
+display_name = "Render Nutrient Slurry"
+inputs = {
+&"fungal_biomass": 2,
+&"purified_water": 1
+}
+outputs = {
+&"nutrient_slurry": 2
+}
+duration = 3.0
+deposit = &""

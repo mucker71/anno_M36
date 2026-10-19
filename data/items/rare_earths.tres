@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"rare_earths"
+display_name = "Rare Earths"
+tier = 0
+category = &"raw"
+tithe_base = 0
+sort_order = 8
+colour = Color(0.2471, 0.5608, 0.5412, 1)
+description = "Trace metals for crystals, cells and cogitators."

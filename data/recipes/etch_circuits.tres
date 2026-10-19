@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"etch_circuits"
+display_name = "Etch Cogitator Circuits"
+inputs = {
+&"copper_wire": 2,
+&"glass": 1,
+&"rare_earths": 1
+}
+outputs = {
+&"cogitator_circuits": 1
+}
+duration = 6.0
+deposit = &""

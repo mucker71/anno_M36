@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"sulphur"
+display_name = "Sulphur"
+tier = 0
+category = &"raw"
+tithe_base = 0
+sort_order = 6
+colour = Color(0.8510, 0.7686, 0.2275, 1)
+description = "Reeking yellow deposits for propellant."

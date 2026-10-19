@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"recaf_roastery"
+display_name = "Recaf Roastery"
+category = &"civic"
+sort_order = 44
+description = ""
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+ports = [{"cell": Vector2i(0, 0), "dir": Vector2i(-1, 0), "kind": 0},
+{"cell": Vector2i(0, 1), "dir": Vector2i(-1, 0), "kind": 0},
+{"cell": Vector2i(0, 0), "dir": Vector2i(1, 0), "kind": 1},
+{"cell": Vector2i(0, 1), "dir": Vector2i(1, 0), "kind": 1}]
+recipes = Array[StringName]([&"roast_recaf"])
+build_cost = {
+&"steel": 10,
+&"ferrocrete": 5
+}
+workers = {
+&"menial": 10
+}
+buffer_capacity = 8
+colour = Color(0.2902, 0.1647, 0.1020, 1)
+height = 1.2
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 1.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false

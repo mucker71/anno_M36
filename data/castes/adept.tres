@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CasteDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/caste_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"adept"
+display_name = "Adepts"
+sort_order = 3
+colour = Color(0.6392, 0.2275, 0.1647, 1)
+basic_needs = {
+&"purified_water": 2.0,
+&"sacred_unguents": 2.0,
+&"nutrient_slurry": 1.0
+}
+comfort_needs = {}

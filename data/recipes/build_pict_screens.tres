@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"build_pict_screens"
+display_name = "Build Pict Screens"
+inputs = {
+&"glass": 1,
+&"cogitator_circuits": 1,
+&"polymer": 1
+}
+outputs = {
+&"pict_screens": 1
+}
+duration = 8.0
+deposit = &""

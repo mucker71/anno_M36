@@ -1,0 +1,12 @@
+# Godot 4
+.godot/
+/android/
+*.translation
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

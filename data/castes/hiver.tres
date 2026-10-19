@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CasteDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/caste_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"hiver"
+display_name = "Hivers"
+sort_order = 1
+colour = Color(0.4157, 0.5412, 0.6392, 1)
+basic_needs = {
+&"ration_bricks": 3.0,
+&"purified_water": 3.0
+}
+comfort_needs = {
+&"recaf": 1.0,
+&"pict_screens": 0.2
+}

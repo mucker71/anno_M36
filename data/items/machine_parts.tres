@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"machine_parts"
+display_name = "Machine Parts"
+tier = 2
+category = &"industrial"
+tithe_base = 0
+sort_order = 26
+colour = Color(0.6039, 0.5412, 0.4157, 1)
+description = "Spare parts. Consumed by maintenance."

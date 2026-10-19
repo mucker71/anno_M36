@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"steel_alloy"
+display_name = "Steel Alloy"
+tier = 1
+category = &"industrial"
+tithe_base = 0
+sort_order = 14
+colour = Color(0.6549, 0.7020, 0.7490, 1)
+description = "Dense alloy billets, rolled into far more steel."

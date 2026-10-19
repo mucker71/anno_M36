@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"blast_furnace"
+display_name = "Blast Furnace"
+category = &"industry"
+sort_order = 18
+description = ""
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+ports = [{"cell": Vector2i(0, 0), "dir": Vector2i(-1, 0), "kind": 0},
+{"cell": Vector2i(0, 1), "dir": Vector2i(-1, 0), "kind": 0},
+{"cell": Vector2i(1, 0), "dir": Vector2i(1, 0), "kind": 1},
+{"cell": Vector2i(1, 1), "dir": Vector2i(1, 0), "kind": 1}]
+recipes = Array[StringName]([&"smelt_steel", &"smelt_scrap"])
+build_cost = {
+&"steel": 20,
+&"ferrocrete": 10
+}
+workers = {
+&"menial": 30
+}
+buffer_capacity = 8
+colour = Color(0.4157, 0.2275, 0.1647, 1)
+height = 2.0
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 1.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false

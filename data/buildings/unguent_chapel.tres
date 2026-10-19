@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"unguent_chapel"
+display_name = "Unguent Chapel"
+category = &"industry"
+sort_order = 33
+description = ""
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+ports = [{"cell": Vector2i(0, 0), "dir": Vector2i(-1, 0), "kind": 0},
+{"cell": Vector2i(1, 0), "dir": Vector2i(1, 0), "kind": 1}]
+recipes = Array[StringName]([&"bless_unguents"])
+build_cost = {
+&"steel": 15,
+&"glass": 5
+}
+workers = {
+&"adept": 5
+}
+buffer_capacity = 8
+colour = Color(0.6392, 0.5020, 0.2275, 1)
+height = 1.8
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 1.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false

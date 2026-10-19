@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"sacred_unguents"
+display_name = "Sacred Unguents"
+tier = 1
+category = &"industrial"
+tithe_base = 0
+sort_order = 25
+colour = Color(0.7882, 0.6275, 0.2275, 1)
+description = "Blessed oils. Machines fail without them."

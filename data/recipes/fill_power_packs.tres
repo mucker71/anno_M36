@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"fill_power_packs"
+display_name = "Fill Las Power Packs"
+inputs = {
+&"power_cells": 2,
+&"polymer": 1
+}
+outputs = {
+&"las_power_pack": 2
+}
+duration = 5.0
+deposit = &""

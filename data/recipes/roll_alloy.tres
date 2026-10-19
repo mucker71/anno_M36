@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"roll_alloy"
+display_name = "Roll Alloy into Steel"
+inputs = {
+&"steel_alloy": 1
+}
+outputs = {
+&"steel": 3
+}
+duration = 2.0
+deposit = &""

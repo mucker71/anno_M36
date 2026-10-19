@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"lasgun"
+display_name = "Lasgun"
+tier = 3
+category = &"tithe"
+tithe_base = 20
+sort_order = 31
+colour = Color(0.6392, 0.2275, 0.1647, 1)
+description = "The Imperial Guard's rifle. The tithe's centrepiece."

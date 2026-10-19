@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"distil_amasec"
+display_name = "Distil Amasec"
+inputs = {
+&"fungal_biomass": 2,
+&"purified_water": 1,
+&"glass": 1
+}
+outputs = {
+&"amasec": 1
+}
+duration = 8.0
+deposit = &""

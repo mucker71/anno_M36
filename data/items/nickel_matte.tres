@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"nickel_matte"
+display_name = "Nickel Matte"
+tier = 1
+category = &"industrial"
+tithe_base = 0
+sort_order = 13
+colour = Color(0.6392, 0.6784, 0.5490, 1)
+description = "Smelted nickel, ready for alloying."

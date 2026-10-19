@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"steel"
+display_name = "Steel"
+tier = 1
+category = &"industrial"
+tithe_base = 120
+sort_order = 12
+colour = Color(0.5490, 0.5765, 0.6039, 1)
+description = "The hive's basic building metal."

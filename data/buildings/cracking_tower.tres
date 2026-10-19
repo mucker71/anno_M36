@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"cracking_tower"
+display_name = "Cracking Tower"
+category = &"industry"
+sort_order = 28
+description = "Splits crude into fuel and polymer at once. Big, efficient, needs Adepts."
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2)])
+ports = [{"cell": Vector2i(0, 0), "dir": Vector2i(-1, 0), "kind": 0},
+{"cell": Vector2i(0, 1), "dir": Vector2i(-1, 0), "kind": 0},
+{"cell": Vector2i(0, 2), "dir": Vector2i(-1, 0), "kind": 0},
+{"cell": Vector2i(2, 0), "dir": Vector2i(1, 0), "kind": 1},
+{"cell": Vector2i(2, 2), "dir": Vector2i(1, 0), "kind": 1},
+{"cell": Vector2i(1, 2), "dir": Vector2i(0, 1), "kind": 1}]
+recipes = Array[StringName]([&"crack_promethium"])
+build_cost = {
+&"steel": 60,
+&"ferrocrete": 40,
+&"machine_parts": 10,
+&"ceramite": 5
+}
+workers = {
+&"hiver": 30,
+&"adept": 5
+}
+buffer_capacity = 12
+colour = Color(0.4157, 0.2902, 0.5412, 1)
+height = 4.0
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 1.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false

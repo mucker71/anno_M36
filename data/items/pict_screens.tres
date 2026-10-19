@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"pict_screens"
+display_name = "Pict Screens"
+tier = 3
+category = &"civic"
+tithe_base = 0
+sort_order = 38
+colour = Color(0.2275, 0.2275, 0.3529, 1)
+description = "Entertainment and propaganda feeds."

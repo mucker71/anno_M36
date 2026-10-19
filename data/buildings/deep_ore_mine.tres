@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"deep_ore_mine"
+display_name = "Deep Ore Mine"
+category = &"extraction"
+sort_order = 12
+description = "Place over an ore deposit. Output scales with how many cells cover the deposit."
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+ports = [{"cell": Vector2i(1, 0), "dir": Vector2i(1, 0), "kind": 1},
+{"cell": Vector2i(1, 1), "dir": Vector2i(1, 0), "kind": 1}]
+recipes = Array[StringName]([&"extract_iron_ore", &"extract_coal", &"extract_nickel_ore", &"extract_copper_ore", &"extract_rare_earths", &"extract_sulphur"])
+build_cost = {
+&"steel": 15
+}
+workers = {
+&"menial": 30
+}
+buffer_capacity = 8
+colour = Color(0.3529, 0.2510, 0.1882, 1)
+height = 1.4
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 1.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = true

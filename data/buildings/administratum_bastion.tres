@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"administratum_bastion"
+display_name = "Administratum Bastion"
+category = &"core"
+sort_order = 0
+description = "Seat of the planetary governor's office. Holds the hive stockpile and sends the tithe."
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2)])
+ports = []
+recipes = Array[StringName]([])
+build_cost = {}
+workers = {}
+buffer_capacity = 8
+colour = Color(0.2902, 0.2471, 0.3529, 1)
+height = 3.0
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 12.0
+decay_per_minute = 0.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false

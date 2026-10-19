@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"flak_armour"
+display_name = "Flak Armour"
+tier = 3
+category = &"tithe"
+tithe_base = 25
+sort_order = 34
+colour = Color(0.3529, 0.4157, 0.2902, 1)
+description = "Layered infantry armour."

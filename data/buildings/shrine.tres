@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"shrine"
+display_name = "Shrine"
+category = &"service"
+sort_order = 49
+description = "Fervour: cheap and steady. Covers 300 citizens while supplied with icons."
+cells = Array[Vector2i]([Vector2i(0, 0)])
+ports = []
+recipes = Array[StringName]([&"hold_mass"])
+build_cost = {
+&"steel": 5,
+&"ferrocrete": 10
+}
+workers = {
+&"menial": 2
+}
+buffer_capacity = 8
+colour = Color(0.7882, 0.6275, 0.2275, 1)
+height = 2.2
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 1.0
+service_kind = &"fervour"
+service_capacity = 300
+needs_deposit = false

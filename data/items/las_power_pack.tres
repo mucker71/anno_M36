@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"las_power_pack"
+display_name = "Las Power Pack"
+tier = 3
+category = &"tithe"
+tithe_base = 40
+sort_order = 32
+colour = Color(0.1647, 0.3529, 0.6392, 1)
+description = "Lasgun ammunition."

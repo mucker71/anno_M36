@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"extract_crude_promethium"
+display_name = "Pump Crude Promethium"
+inputs = {}
+outputs = {
+&"crude_promethium": 1
+}
+duration = 2.0
+deposit = &"crude_promethium"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/recipe_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"grind_crystal"
+display_name = "Grind Focusing Crystal"
+inputs = {
+&"silica_sand": 2,
+&"rare_earths": 1
+}
+outputs = {
+&"focusing_crystal": 1
+}
+duration = 5.0
+deposit = &""

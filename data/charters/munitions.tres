@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"munitions"
+display_name = "Munitions"
+tier = 2
+cost = 2
+sort_order = 14
+prerequisites = Array[StringName]([&"hiver_quarters"])
+buildings = Array[StringName]([&"casing_press", &"propellant_works", &"munitions_works", &"stamping_press", &"mixing_vat", &"loading_line"])
+networks = Array[StringName]([])
+description = "Autogun rounds for the tithe."

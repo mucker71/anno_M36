@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"founding"
+display_name = "Founding Charter"
+tier = 0
+cost = 0
+sort_order = 0
+prerequisites = Array[StringName]([])
+buildings = Array[StringName]([&"administratum_bastion", &"district_depot", &"slum_stack", &"sump_pump", &"water_filter", &"fungal_vats", &"slurry_vat", &"ration_press", &"deep_ore_mine", &"blast_furnace", &"scavenger_post", &"open_quarry", &"ferrocrete_mixer", &"warehouse", &"pump_turbine", &"filter_bed", &"spore_tank", &"rendering_tank", &"press_line", &"grinder_rig", &"bellows_house", &"salvage_sorter", &"quarry_grinder", &"cement_drum"])
+networks = Array[StringName]([&"walk", &"road"])
+description = "Housing, food, water, and the steel and ferrocrete to build more of them."

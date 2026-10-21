@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"advanced_steel"
+display_name = "Advanced Metallurgy"
+tier = 2
+cost = 2
+sort_order = 13
+prerequisites = Array[StringName]([&"workshops"])
+buildings = Array[StringName]([&"matte_smelter", &"alloy_forge", &"rolling_mill", &"matte_converter", &"forge_hammer", &"roller_stand"])
+networks = Array[StringName]([])
+description = "The three-step alloy route: three times the steel per ore."

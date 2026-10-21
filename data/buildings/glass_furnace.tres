@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"glass_furnace"
+display_name = "Glass Furnace"
+category = &"module"
+sort_order = 69
+description = "Melts the batch for blowing and casting. Required by the Glassworks: each one adds 50% speed, two run it at full rate."
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+ports = []
+recipes = Array[StringName]([])
+build_cost = {
+&"steel": 5,
+&"ferrocrete": 3
+}
+workers = {}
+buffer_capacity = 8
+colour = Color(0.2627, 0.4039, 0.4039, 1)
+height = 1.04
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 0.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false
+module_slots = 0
+module_hosts = Array[StringName]([&"glassworks"])
+module_effects = {
+&"drive": 0.5
+}
+module_upkeep = {}
+module_recipes = Array[StringName]([])
+is_depot = false
+station_capacity = 0.0
+drive_module = &""

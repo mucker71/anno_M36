@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"glass"
+display_name = "Glassworking"
+tier = 1
+cost = 1
+sort_order = 4
+prerequisites = Array[StringName]([])
+buildings = Array[StringName]([&"glassworks", &"glass_furnace"])
+networks = Array[StringName]([])
+description = "Glass for windows, lenses and screens."

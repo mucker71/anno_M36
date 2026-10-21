@@ -232,6 +232,12 @@ def default_ports(cells, inputs: bool, outputs: bool):
 B = []
 
 
+# Every production building needs this many times its listed crew. Kept as one
+# knob so the hive-to-hamlet balance can be tuned in one place.
+WORKER_SCALE = 5
+PRODUCTION = ("extraction", "industry", "civic")
+
+
 def building(id, name, category, shape, recipes=(), cost=None, workers=None,
              ports=None, colour="#777777", height=1.0, buffer=8,
              housing_caste="", housing_capacity=0, upgrade_to="", upgrade_cost=None,
@@ -242,6 +248,8 @@ def building(id, name, category, shape, recipes=(), cost=None, workers=None,
     cells = shape_cells(shape)
     if module_slots is None:
         module_slots = auto_slots(category, len(cells))
+    if category in PRODUCTION and workers:
+        workers = {k: v * WORKER_SCALE for k, v in workers.items()}
     if ports is None:
         has_inputs = any(r for r in recipes if RECIPE_BY_ID[r][2])
         has_outputs = any(r for r in recipes if RECIPE_BY_ID[r][3])
@@ -257,15 +265,16 @@ def building(id, name, category, shape, recipes=(), cost=None, workers=None,
         description=description, module_slots=module_slots, module_hosts=list(module_hosts),
         module_effects=module_effects or {}, module_upkeep=module_upkeep or {},
         module_recipes=list(module_recipes), is_depot=is_depot,
-        station_capacity=station_capacity,
+        station_capacity=station_capacity, drive_module="",
     ))
 
 
 def auto_slots(category: str, cells: int) -> int:
-    """Production buildings get module slots by size; everything else none."""
-    if category not in ("industry", "extraction", "civic"):
+    """Production buildings get module slots by size; everything else none.
+    Room for at least two drive modules plus a warehouse on the smallest."""
+    if category not in PRODUCTION:
         return 0
-    return 1 if cells <= 2 else (2 if cells <= 5 else 3)
+    return 3 if cells <= 2 else (4 if cells <= 5 else 5)
 
 
 RECIPE_BY_ID = {r[0]: r for r in RECIPES}
@@ -477,10 +486,10 @@ building("deep_bore_drill", "Deep Bore Drill", "module", "1x2", ports=[],
          cost={"steel": 25, "machine_parts": 5}, colour="#5a4030", height=2.2, decay=0.0,
          module_hosts=["deep_ore_mine", "open_quarry"], module_effects={"output": 1.5, "decay": 1.5},
          description="Mine output x1.5. Empties the deposit faster.")
-building("storage_annex", "Storage Annex", "module", "1x2", ports=[],
-         cost={"steel": 10, "ferrocrete": 10}, colour="#5a5a4a", height=1.0, decay=0.0,
+building("warehouse", "Warehouse", "module", "1x2", ports=[],
+         cost={"steel": 6, "ferrocrete": 10}, colour="#5a5a4a", height=1.0, decay=0.0,
          module_hosts=["industry", "extraction", "civic"], module_effects={"buffer": 2.0},
-         description="Doubles the host's buffers, so it rides out supply gaps.")
+         description="Doubles the host's input and output buffers, so it rides out supply gaps. Fits any production building.")
 building("fungal_mill", "Fungal Mill", "module", "1x2", ports=[],
          cost={"steel": 10, "ferrocrete": 5}, colour="#6a7a3a", height=1.2, decay=0.0,
          module_hosts=["ration_press"], module_recipes=["press_rations_direct"],
@@ -494,6 +503,76 @@ building("nickel_crucible", "Nickel Crucible", "module", "1x2", ports=[],
          module_hosts=["alloy_forge"], module_recipes=["forge_alloy_integrated"],
          description="Lets an Alloy Forge take raw nickel ore, skipping the Matte Smelter.")
 
+# Drive modules. Every production building has its own, and runs only while at
+# least one is attached. Each adds DRIVE_PER_MODULE to the building's speed, so
+# two run it at full rate and more push it past that, up to its slot count.
+# Module size grows with the host, so big industry sprawls like Anno farmland.
+DRIVE_PER_MODULE = 0.5
+DRIVE_MODULES = {
+    # host id: (module id, name, description)
+    "deep_ore_mine": ("grinder_rig", "Grinder Rig", "Crushing rig that drives the mine's bore."),
+    "open_quarry": ("quarry_grinder", "Quarry Grinder", "Breaks quarried rock down for haulage."),
+    "promethium_derrick": ("pump_jack", "Pump Jack", "Draws crude up the well."),
+    "scavenger_post": ("salvage_sorter", "Salvage Sorter", "Sorting floor where scrap gangs strip the ruins."),
+    "sump_pump": ("pump_turbine", "Pump Turbine", "Lifts sump water to the surface."),
+    "fungal_vats": ("spore_tank", "Spore Tank", "Seeds and feeds the fungal culture."),
+    "blast_furnace": ("bellows_house", "Bellows House", "Forces air into the furnace."),
+    "matte_smelter": ("matte_converter", "Matte Converter", "Blows impurities out of the nickel melt."),
+    "alloy_forge": ("forge_hammer", "Forge Hammer", "Steam hammer that works the alloy billets."),
+    "rolling_mill": ("roller_stand", "Roller Stand", "A stand of rollers for the mill train."),
+    "wire_drawer": ("drawing_bench", "Drawing Bench", "Pulls copper through the dies."),
+    "glassworks": ("glass_furnace", "Glass Furnace", "Melts the batch for blowing and casting."),
+    "ferrocrete_mixer": ("cement_drum", "Cement Drum", "Turns the aggregate and binder."),
+    "water_filter": ("filter_bed", "Filter Bed", "Layers of charcoal and sand."),
+    "promethium_refinery": ("fractionating_column", "Fractionating Column", "Separates the crude by weight."),
+    "polymer_plant": ("reactor_vessel", "Reactor Vessel", "Pressure vessel for polymerisation."),
+    "cracking_tower": ("catalyst_stack", "Catalyst Stack", "Catalyst beds that split the crude."),
+    "plasteel_foundry": ("bonding_press", "Bonding Press", "Presses polymer into the hot steel."),
+    "propellant_works": ("mixing_vat", "Mixing Vat", "Blends sulphur and coal."),
+    "crystal_grinder": ("lapping_wheel", "Lapping Wheel", "Grinds focusing crystals to shape."),
+    "slurry_vat": ("rendering_tank", "Rendering Tank", "Breaks biomass down to paste."),
+    "unguent_chapel": ("blessing_font", "Blessing Font", "Where the oils are blessed in batches."),
+    "machine_shop": ("lathe_bay", "Lathe Bay", "A bay of lathes and mills."),
+    "cogitator_lab": ("etching_bath", "Etching Bath", "Acid baths for circuit plates."),
+    "cell_plant": ("charge_rack", "Charge Rack", "Racks where cells take their charge."),
+    "casing_press": ("stamping_press", "Stamping Press", "Stamps casings from steel strip."),
+    "ceramite_kiln": ("kiln_chamber", "Kiln Chamber", "A firing chamber for ceramite plate."),
+    "lasgun_manufactorum": ("assembly_line", "Assembly Line", "A line of benches and servitor arms."),
+    "power_pack_line": ("cell_filler", "Cell Filler", "Seals cells into power-pack casings."),
+    "munitions_works": ("loading_line", "Loading Line", "Fills and crimps the rounds."),
+    "flak_tailory": ("stitching_floor", "Stitching Floor", "Rows of machinists layering flak."),
+    "ration_press": ("press_line", "Press Line", "Moulds slurry into bricks."),
+    "recaf_roastery": ("roasting_drum", "Roasting Drum", "Roasts the recaf beans."),
+    "amasec_distillery": ("still_house", "Still House", "Copper stills for the spirit."),
+    "pict_workshop": ("tube_bench", "Tube Bench", "Assembles screens and cathode tubes."),
+    "icon_workshop": ("casting_pit", "Casting Pit", "Sand moulds for aquilas and saints."),
+    "enforcer_armoury": ("armourers_bench", "Armourer's Bench", "Fits and tests enforcer kit."),
+}
+
+
+def add_drive_modules() -> None:
+    for host_id, (mid, name, desc) in DRIVE_MODULES.items():
+        host = next(b for b in B if b["id"] == host_id)
+        n = len(host["cells"])
+        shape = "1x1" if n <= 2 else ("1x2" if n <= 5 else "2x2")
+        steel = max(4, int(host["cost"].get("steel", 0)) // 3)
+        cost = {"steel": steel}
+        if host["cost"].get("ferrocrete"):
+            cost["ferrocrete"] = max(2, int(host["cost"]["ferrocrete"]) // 3)
+        if host["cost"].get("machine_parts"):
+            cost["machine_parts"] = max(1, int(host["cost"]["machine_parts"]) // 3)
+        r, g, b_ = (int(host["colour"].lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+        colour = "#%02x%02x%02x" % (int(r * 0.75), int(g * 0.75), int(b_ * 0.75))
+        building(mid, name, "module", shape, ports=[], cost=cost, colour=colour,
+                 height=round(host["height"] * 0.65, 2), decay=0.0,
+                 module_hosts=[host_id], module_effects={"drive": DRIVE_PER_MODULE},
+                 description=f"{desc} Required by the {host['name']}: each one adds "
+                             f"{int(DRIVE_PER_MODULE * 100)}% speed, two run it at full rate.")
+        host["drive_module"] = mid
+
+
+add_drive_modules()
+
 # Services: the Fervour and Order levers (Comfort comes from caste comfort needs)
 building("shrine", "Shrine", "service", "1x1",
          recipes=["hold_mass"], cost={"steel": 5, "ferrocrete": 10}, ports=[],
@@ -505,6 +584,132 @@ building("enforcer_precinct", "Enforcer Precinct", "service", "2x2",
          workers={"hiver": 10}, colour="#2a2a3a", height=2.0,
          service_kind="order", service_capacity=500,
          description="Order: fast and reliable. Covers 500 citizens while supplied with kits.")
+
+
+# ---------------------------------------------------------------------------
+# Charters: what the Administratum permits the hive to build.
+# The founding charter (cost 0) is owned from the start. Every other charter is
+# bought with charters earned from tithes (two for full delivery, one for 75%+)
+# and needs its prerequisites first. A production building's drive module comes
+# with it automatically. networks: "walk", "road", "rail".
+# ---------------------------------------------------------------------------
+CHARTERS = [
+    # id, name, tier, cost, prerequisites, buildings, networks, description
+    ("founding", "Founding Charter", 0, 0, [],
+     ["administratum_bastion", "district_depot", "slum_stack", "sump_pump", "water_filter",
+      "fungal_vats", "slurry_vat", "ration_press", "deep_ore_mine", "blast_furnace",
+      "scavenger_post", "open_quarry", "ferrocrete_mixer", "warehouse"],
+     ["walk", "road"],
+     "Housing, food, water, and the steel and ferrocrete to build more of them."),
+
+    ("ferrocrete_housing", "Ferrocrete Housing", 1, 1, [], ["ferrocrete_block"], [],
+     "Upgrade slum stacks into ferrocrete blocks that house twice as many."),
+    ("devotion", "Ecclesiarchy Writ", 1, 1, [], ["icon_workshop", "shrine"], [],
+     "Shrines and the icon workshops that supply them: the Fervour lever."),
+    ("recaf", "Recaf Licence", 1, 1, [], ["recaf_roastery"], [],
+     "Recaf, the first comfort good for menials and hivers."),
+    ("glass", "Glassworking", 1, 1, [], ["glassworks"], [],
+     "Glass for windows, lenses and screens."),
+    ("hiver_quarters", "Hiver Quarters", 1, 1, [], ["hiver_tenement"], [],
+     "Housing for hivers, the skilled caste most factories need."),
+    ("cargo_rail", "Cargo Rail", 1, 1, [], ["cargo_station"], ["rail"],
+     "Cargo rail and stations for fast freight between districts."),
+    ("workshops", "Workshops", 1, 1, ["hiver_quarters"], ["machine_shop", "wire_drawer"], [],
+     "Machine parts for repairs, and copper wire."),
+    ("promethium", "Promethium Rights", 1, 1, ["hiver_quarters"],
+     ["promethium_derrick", "promethium_refinery"], [],
+     "Pump and refine promethium, a tithe staple."),
+
+    ("integrated_milling", "Integrated Milling", 2, 1, [], ["fungal_mill"], [],
+     "A mill module that lets a ration press work raw biomass."),
+    ("polymers", "Polymer Chemistry", 2, 2, ["promethium"], ["polymer_plant"], [],
+     "Plastics from promethium and coal."),
+    ("plasteel", "Plasteel Foundries", 2, 2, ["polymers", "ferrocrete_housing"],
+     ["plasteel_foundry", "hab_stack"], [],
+     "Plasteel, a tithe good, and the hab stacks built from it."),
+    ("hiver_blocks", "Hiver Blocks", 2, 2, ["hiver_quarters", "glass"], ["hiver_block"], [],
+     "Upgrade hiver tenements into blocks of 120."),
+    ("advanced_steel", "Advanced Metallurgy", 2, 2, ["workshops"],
+     ["matte_smelter", "alloy_forge", "rolling_mill"], [],
+     "The three-step alloy route: three times the steel per ore."),
+    ("munitions", "Munitions", 2, 2, ["hiver_quarters"],
+     ["casing_press", "propellant_works", "munitions_works"], [],
+     "Autogun rounds for the tithe."),
+    ("flak", "Flak Armour", 2, 2, ["polymers"], ["flak_tailory"], [],
+     "Layered flak armour for the tithe."),
+    ("power_cells", "Power Cells", 2, 2, ["workshops", "promethium"], ["cell_plant"], [],
+     "Charged cells for weapons, kits and coils."),
+    ("scribes", "Scriptorium", 2, 2, ["glass"], ["scribe_quarters"], [],
+     "Housing for scribes, the clerical caste."),
+    ("servitors", "Servitor Licence", 2, 2, ["workshops"], ["servitor_bay", "deep_bore_drill"], [],
+     "Servitor bays that cut crews, and deep bore drills for mines."),
+    ("amasec", "Amasec Distilling", 2, 2, ["glass", "scribes"], ["amasec_distillery"], [],
+     "Amasec, a comfort good for the upper castes."),
+    ("onsite_crucibles", "Onsite Crucibles", 2, 2, ["advanced_steel"], ["nickel_crucible"], [],
+     "A crucible module that lets an alloy forge take raw nickel ore."),
+    ("overclocking", "Overclocking", 2, 2, ["power_cells"], ["overclock_coils"], [],
+     "Coils that run industry faster and harder."),
+
+    ("enforcers", "Arbites Mandate", 3, 3, ["power_cells"], ["enforcer_armoury", "enforcer_precinct"], [],
+     "Enforcer precincts and the armouries that kit them: the Order lever."),
+    ("cogitators", "Cogitator Engines", 3, 3, ["glass", "workshops", "scribes"],
+     ["cogitator_lab", "pict_workshop"], [],
+     "Logic boards, and the pict screens built from them."),
+    ("lasguns", "Lasgun Pattern", 3, 3, ["power_cells", "plasteel"],
+     ["crystal_grinder", "power_pack_line", "lasgun_manufactorum"], [],
+     "Lasguns and power packs, the heart of the tithe."),
+    ("mechanicus", "Mechanicus Enclave", 3, 3, ["workshops", "promethium"],
+     ["forge_cloister", "forge_sanctum", "unguent_chapel", "ceramite_kiln", "machine_spirit_shrine"], [],
+     "Adept housing, sacred unguents, ceramite and machine-spirit shrines."),
+    ("integrated_plasteel", "Integrated Plasteel", 3, 2, ["plasteel"], ["polymer_still"], [],
+     "A still module that lets a plasteel foundry skip the polymer plant."),
+    ("spire_housing", "Spire Housing", 3, 3, ["plasteel", "hiver_blocks", "scribes"],
+     ["hiver_spire", "scribe_manse"], [],
+     "The top housing tiers for hivers and scribes."),
+    ("cracking", "Catalytic Cracking", 3, 3, ["polymers", "mechanicus"], ["cracking_tower"], [],
+     "Split crude into fuel and polymer at once."),
+]
+
+
+def write_charters(out: str) -> None:
+    for i, (cid, name, tier, cost, pre, blds, nets, desc) in enumerate(CHARTERS):
+        text = header("CharterDef", "res://scripts/data/charter_def.gd")
+        text += f"id = {gd_sname(cid)}\n"
+        text += f"display_name = {gd_str(name)}\n"
+        text += f"tier = {tier}\n"
+        text += f"cost = {cost}\n"
+        text += f"sort_order = {i}\n"
+        text += "prerequisites = Array[StringName]([" + ", ".join(gd_sname(x) for x in pre) + "])\n"
+        all_b = list(blds)
+        for bid in blds:
+            host = next(b for b in B if b["id"] == bid)
+            if host["drive_module"]:
+                all_b.append(host["drive_module"])
+        text += "buildings = Array[StringName]([" + ", ".join(gd_sname(x) for x in all_b) + "])\n"
+        text += "networks = Array[StringName]([" + ", ".join(gd_sname(x) for x in nets) + "])\n"
+        text += f"description = {gd_str(desc)}\n"
+        write(os.path.join(out, f"{cid}.tres"), text)
+
+
+def check_charters() -> None:
+    ids = [c[0] for c in CHARTERS]
+    assert len(ids) == len(set(ids)), "duplicate charter id"
+    assert [c for c in CHARTERS if c[3] == 0] == [CHARTERS[0]], "only the founding charter may be free"
+    drive_ids = {b["drive_module"] for b in B if b["drive_module"]}
+    seen = {}
+    for cid, name, tier, cost, pre, blds, nets, desc in CHARTERS:
+        for p_ in pre:
+            assert p_ in ids and ids.index(p_) < ids.index(cid), f"charter {cid}: bad prerequisite {p_}"
+        for bid in blds:
+            assert any(b["id"] == bid for b in B), f"charter {cid}: unknown building {bid}"
+            assert bid not in drive_ids, f"charter {cid}: list the host, not its drive module {bid}"
+            assert bid not in seen, f"{bid} is in both {seen.get(bid)} and {cid}"
+            seen[bid] = cid
+        for n in nets:
+            assert n in ("walk", "road", "rail"), f"charter {cid}: unknown network {n}"
+    for b in B:
+        if b["id"] not in drive_ids:
+            assert b["id"] in seen, f"building {b['id']} is in no charter"
 
 
 # ---------------------------------------------------------------------------
@@ -629,6 +834,7 @@ def write_buildings(out: str) -> None:
         text += f"module_recipes = Array[StringName]([{mrec}])\n"
         text += f"is_depot = {'true' if b['is_depot'] else 'false'}\n"
         text += f"station_capacity = {float(b['station_capacity'])!r}\n"
+        text += f"drive_module = {gd_sname(b['drive_module'])}\n"
         write(os.path.join(out, f"{b['id']}.tres"), text)
 
 
@@ -671,9 +877,12 @@ def check() -> None:
         for k in b["module_upkeep"]:
             assert k in item_ids, f"module {b['id']} unknown upkeep item {k}"
         for k in b["module_effects"]:
-            assert k in ("speed", "output", "decay", "workers", "buffer"), f"module {b['id']} bad effect {k}"
+            assert k in ("speed", "output", "decay", "workers", "buffer", "drive"), f"module {b['id']} bad effect {k}"
         if b["category"] == "module":
             assert b["module_hosts"], f"module {b['id']} has no hosts"
+    for b in B:
+        if b["category"] in PRODUCTION:
+            assert b["drive_module"], f"production building {b['id']} has no drive module"
     # every item is produced somewhere (raws by extraction)
     produced = {k for r in RECIPES for k in r[3]}
     missing = item_ids - produced
@@ -682,8 +891,10 @@ def check() -> None:
 
 def main() -> None:
     check()
+    check_charters()
     for sub, fn in (("items", write_items), ("recipes", write_recipes),
-                    ("castes", write_castes), ("buildings", write_buildings)):
+                    ("castes", write_castes), ("buildings", write_buildings),
+                    ("charters", write_charters)):
         out = os.path.join(DATA, sub)
         if os.path.isdir(out):
             shutil.rmtree(out)
@@ -691,7 +902,7 @@ def main() -> None:
         fn(out)
     raws = sum(1 for i in ITEMS if i[2] == 0)
     print(f"Wrote {len(ITEMS)} items ({raws} raw), {len(RECIPES)} recipes, "
-          f"{len(B)} buildings, {len(CASTES)} castes to {DATA}")
+          f"{len(B)} buildings, {len(CASTES)} castes, {len(CHARTERS)} charters to {DATA}")
 
 
 if __name__ == "__main__":

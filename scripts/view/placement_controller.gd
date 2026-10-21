@@ -11,6 +11,7 @@ extends Node3D
 
 signal selection_changed(inst: BuildingInstance)
 signal district_selected(id: int)
+signal deposit_selected(cluster_id: int)
 signal build_mode_changed(def: BuildingDef)
 signal mode_changed(mode: int)
 
@@ -25,11 +26,13 @@ var network: int = TransportGrid.Net.ROAD
 var paint_district: int = 0
 var selected: BuildingInstance
 var selected_district: int = -1
+var selected_deposit: int = -1
 var hover_check: Dictionary = {}
 ## For line and rectangle tools: what the drag would do. { tiles, ok_count, cost, reason }
 var drag_preview: Dictionary = {}
 
 var _ghost: Node3D
+var _highlight: Node3D
 var _ghost_key: String = ""
 var _last_origin := Vector2i(-9999, -9999)
 var _drag_start := Vector2i(-1, -1)
@@ -40,6 +43,9 @@ func _ready() -> void:
 	_ghost = Node3D.new()
 	_ghost.name = "Ghost"
 	add_child(_ghost)
+	_highlight = Node3D.new()
+	_highlight.name = "Highlight"
+	add_child(_highlight)
 
 
 # --- Mode switching -------------------------------------------------------------
@@ -83,6 +89,8 @@ func _set_mode(m: int) -> void:
 	_clear_ghost()
 	if m != Mode.SELECT:
 		select(null)
+		selected_district = -1
+		_set_deposit(-1)
 	mode_changed.emit(m)
 
 
@@ -94,13 +102,55 @@ func select(inst: BuildingInstance) -> void:
 		world.views[selected.uid].set_selected(true)
 	if inst:
 		selected_district = -1
+		_set_deposit(-1)
 	selection_changed.emit(selected)
 
 
 func select_district(id: int) -> void:
 	select(null)
+	_set_deposit(-1)
 	selected_district = id
 	district_selected.emit(id)
+
+
+## Selects a deposit cluster for the inspector and outlines its tiles.
+func select_deposit(cluster_id: int) -> void:
+	select(null)
+	selected_district = -1
+	_set_deposit(cluster_id)
+	deposit_selected.emit(cluster_id)
+
+
+func _set_deposit(cluster_id: int) -> void:
+	selected_deposit = cluster_id
+	for child in _highlight.get_children():
+		child.queue_free()
+	var cl := world.deposits.get_cluster(cluster_id) if world else null
+	if cl == null:
+		return
+	var item := Database.item(cl.item)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var lookup := {}
+	for c in cl.cells:
+		lookup[c] = true
+	# Mostly white so dark deposits (coal) still show, tinted toward the resource.
+	var col := Color((item.colour if item else Color.WHITE).lerp(Color(1, 0.95, 0.8), 0.7), 0.95)
+	for c: Vector2i in cl.cells:
+		# Bright edge wherever the cluster ends, so its outline reads at any zoom.
+		var w := 0.16
+		if not lookup.has(c + Vector2i(0, -1)):
+			NetworkView.add_box(st, Vector3(c.x, 0.0, c.y), Vector3(c.x + 1, 0.16, c.y + w), col)
+		if not lookup.has(c + Vector2i(0, 1)):
+			NetworkView.add_box(st, Vector3(c.x, 0.0, c.y + 1 - w), Vector3(c.x + 1, 0.16, c.y + 1), col)
+		if not lookup.has(c + Vector2i(-1, 0)):
+			NetworkView.add_box(st, Vector3(c.x, 0.0, c.y), Vector3(c.x + w, 0.16, c.y + 1), col)
+		if not lookup.has(c + Vector2i(1, 0)):
+			NetworkView.add_box(st, Vector3(c.x + 1 - w, 0.0, c.y), Vector3(c.x + 1, 0.16, c.y + 1), col)
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = _ghost_material()
+	_highlight.add_child(mi)
 
 
 # --- Per frame ------------------------------------------------------------------
@@ -139,6 +189,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				select(null)
 				selected_district = -1
+				_set_deposit(-1)
 				district_selected.emit(-1)
 			get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"rotate_building") and mode == Mode.BUILD:
@@ -162,8 +213,11 @@ func _left_button(pressed: bool) -> void:
 		Mode.SELECT:
 			if pressed:
 				var b := world.grid.building_at(cell)
+				var cl := world.deposits.cluster_at(cell)
 				if b:
 					select(b)
+				elif cl:
+					select_deposit(cl.id)
 				else:
 					select_district(world.grid.districts.id_at(cell))
 		Mode.BUILD:

@@ -4,7 +4,7 @@ extends RefCounted
 
 enum Status { IDLE, WORKING, NO_RECIPE, MISSING_INPUTS, OUTPUT_BLOCKED, NO_WORKERS,
 	DEPOSIT_EXHAUSTED, HOUSING, PASSIVE, NO_ROAD, NO_MARKET, MODULE_ACTIVE, NO_HOST,
-	UPKEEP_UNPAID }
+	UPKEEP_UNPAID, NEEDS_MODULE }
 
 const STATUS_TEXT := {
 	Status.IDLE: "Idle",
@@ -21,6 +21,7 @@ const STATUS_TEXT := {
 	Status.MODULE_ACTIVE: "Module active",
 	Status.NO_HOST: "Not attached: place touching a valid host with a free slot",
 	Status.UPKEEP_UNPAID: "Module off: upkeep not met",
+	Status.NEEDS_MODULE: "Idle: needs a drive module",
 }
 
 var uid: int
@@ -111,6 +112,26 @@ func effect(key: String) -> float:
 	return v
 
 
+## Speed from attached drive modules: 0 with none, so the building can't run.
+## Buildings that need no drive module always return 1.
+func drive() -> float:
+	if not def.needs_drive():
+		return 1.0
+	var d := 0.0
+	for m in modules:
+		if m.module_active and m.def.module_effects.has("drive"):
+			d += float(m.def.module_effects["drive"])
+	return d
+
+
+func drive_count() -> int:
+	var n := 0
+	for m in modules:
+		if m.def.id == def.drive_module:
+			n += 1
+	return n
+
+
 func free_module_slots() -> int:
 	return def.module_slots - modules.size()
 
@@ -163,6 +184,9 @@ func output_has_room() -> bool:
 
 func status_text() -> String:
 	var text: String = STATUS_TEXT.get(status, "?")
+	if status == Status.NEEDS_MODULE:
+		var m := Database.building(def.drive_module)
+		text = "Idle: attach a %s to run" % (m.display_name if m else "drive module")
 	if status == Status.MISSING_INPUTS and missing_input != &"":
 		text += ": " + Database.item_name(missing_input)
 	return text

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"amasec"
+display_name = "Amasec Distilling"
+tier = 2
+cost = 2
+sort_order = 19
+prerequisites = Array[StringName]([&"glass", &"scribes"])
+buildings = Array[StringName]([&"amasec_distillery", &"still_house"])
+networks = Array[StringName]([])
+description = "Amasec, a comfort good for the upper castes."

@@ -31,6 +31,11 @@ func _ready() -> void:
 		test_module_effects,
 		test_module_recipe_and_upkeep,
 		test_tithe_first_cycle,
+		test_worker_scale,
+		test_drive_required,
+		test_unlocks,
+		test_founding_threshold,
+		test_quota_only_producible,
 		test_terrain_generation,
 	]
 	for t in tests:
@@ -86,15 +91,51 @@ func lay(transport: TransportGrid, cells: Array[Vector2i], net: int) -> void:
 	transport.set_masks(masks)
 
 
+## Places a module touching host, at the first spot (scanning outward) where
+## it attaches to that host without covering one of the host's ports.
+func attach(grid: BuildGrid, host: BuildingInstance, module_id: StringName) -> BuildingInstance:
+	var def := Database.building(module_id)
+	var lo := Vector2i(1 << 20, 1 << 20)
+	var hi := Vector2i(-(1 << 20), -(1 << 20))
+	for c in host.cells:
+		lo = Vector2i(mini(lo.x, c.x), mini(lo.y, c.y))
+		hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
+	var port_cells := {}
+	for p in host.ports:
+		port_cells[p["cell"] + p["dir"]] = true
+	# First pass keeps the host's ports clear; the second accepts covering one.
+	for allow_blocking in [false, true]:
+		for r in 4:
+			for y in range(lo.y - 3, hi.y + 3):
+				for x in range(lo.x - 3, hi.x + 3):
+					var check := grid.check_placement(def, Vector2i(x, y), r)
+					if not check["ok"] or check["host"] != host:
+						continue
+					var blocks := false
+					for c in check["cells"]:
+						if port_cells.has(c):
+							blocks = true
+					if allow_blocking or not blocks:
+						return grid.place(def, Vector2i(x, y), r)
+	return null
+
+
+## Attaches n of the host's own drive module.
+func drive(grid: BuildGrid, host: BuildingInstance, n: int = 2) -> void:
+	for i in n:
+		check(attach(grid, host, host.def.drive_module) != null,
+			"could not attach drive module %d to %s" % [i + 1, host.def.id])
+
+
 func run(economy: Economy, seconds: float) -> void:
 	for i in int(seconds / Economy.STEP):
 		economy.step(Economy.STEP)
 
 
-## Bastion, two slums, two mines and a furnace, all on one road.
-##   road along y = 10, and up x = 19 to the Bastion at (20, 20).
+## Bastion, five slums, two mines and a furnace (each with two drive modules),
+## all on one road: along y = 10, and up x = 19 to the Bastion at (20, 20).
 func chain_world() -> Dictionary:
-	var w := flat_world(Vector2i(32, 32))
+	var w := flat_world(Vector2i(48, 48))
 	var grid: BuildGrid = w["grid"]
 	var deposits: DepositMap = w["deposits"]
 	var economy: Economy = w["economy"]
@@ -106,9 +147,13 @@ func chain_world() -> Dictionary:
 	w["bastion"] = grid.place(Database.building(&"administratum_bastion"), Vector2i(20, 20), 0)
 	w["slum_a"] = grid.place(Database.building(&"slum_stack"), Vector2i(12, 11), 0)
 	w["slum_b"] = grid.place(Database.building(&"slum_stack"), Vector2i(15, 11), 0)
+	for x in [26, 29, 32]:
+		grid.place(Database.building(&"slum_stack"), Vector2i(x, 11), 0)
 	w["iron_mine"] = grid.place(Database.building(&"deep_ore_mine"), Vector2i(2, 8), 0)
 	w["coal_mine"] = grid.place(Database.building(&"deep_ore_mine"), Vector2i(6, 8), 0)
 	w["furnace"] = grid.place(Database.building(&"blast_furnace"), Vector2i(10, 8), 0)
+	for key in ["iron_mine", "coal_mine", "furnace"]:
+		drive(grid, w[key], 2)
 	var home: DistrictMap.District = w["home"]
 	home.add(&"ration_bricks", 500)
 	home.add(&"purified_water", 500)
@@ -311,6 +356,7 @@ func test_road_access_required() -> void:
 	home.add(&"iron_ore", 50)
 	home.add(&"coal", 50)
 	var lonely := grid.place(Database.building(&"blast_furnace"), Vector2i(2, 25), 0)
+	drive(grid, lonely, 2)
 	run(economy, 10.0)
 	check(not lonely.road_access, "isolated furnace claims road access")
 	check(int(lonely.input_buffer.get(&"iron_ore", 0)) == 0, "isolated furnace pulled goods without a road")
@@ -340,6 +386,8 @@ func test_commute_range() -> void:
 	grid.place(Database.building(&"slum_stack"), Vector2i(4, 6), 0)
 	var near := grid.place(Database.building(&"casing_press"), Vector2i(10, 6), 0)
 	var far := grid.place(Database.building(&"ration_press"), Vector2i(100, 6), 0)
+	drive(grid, near, 2)
+	drive(grid, far, 2)
 	economy.step(Economy.STEP)
 	check(near.staffing > 0.5, "nearby job not staffed (%.2f)" % near.staffing)
 	check(far.staffing == 0.0, "job beyond walking range was staffed")
@@ -351,9 +399,9 @@ func test_deposit_depletes() -> void:
 	var economy: Economy = w["economy"]
 	var deposits: DepositMap = w["deposits"]
 	var iron: BuildingInstance = w["iron_mine"]
-	run(economy, 700.0)
+	run(economy, 1000.0)
 	var cl := deposits.get_cluster(iron.deposit_cluster)
-	check(cl.remaining == 0, "iron deposit not exhausted after 700s (left %d)" % cl.remaining)
+	check(cl.remaining == 0, "iron deposit not exhausted after 1000s (left %d)" % cl.remaining)
 	economy.step(Economy.STEP)
 	check(iron.status == BuildingInstance.Status.DEPOSIT_EXHAUSTED, "mine did not report exhaustion")
 
@@ -415,18 +463,23 @@ func test_freight_road_and_rail() -> void:
 func test_modules_attach_and_slots() -> void:
 	var w := flat_world()
 	var grid: BuildGrid = w["grid"]
-	var press := grid.place(Database.building(&"casing_press"), Vector2i(5, 5), 0)   # 2x1, one slot
-	check(press.def.module_slots == 1, "small building should have one slot")
-	var annex := grid.place(Database.building(&"storage_annex"), Vector2i(5, 6), 1)   # 2x1 under it
-	check(annex != null and annex.host == press, "module did not attach to the touching host")
-	var second := grid.place(Database.building(&"storage_annex"), Vector2i(5, 4), 1)
-	check(second != null and second.host == null, "module attached beyond the slot count")
-	grid.remove(annex)
-	check(second.host == press, "waiting module did not take the freed slot")
+	var press := grid.place(Database.building(&"casing_press"), Vector2i(5, 5), 0)   # 2x1
+	check(press.def.module_slots == 3, "small production building should have 3 slots, has %d" % press.def.module_slots)
+	var below := grid.place(Database.building(&"warehouse"), Vector2i(5, 6), 1)       # 2x1 under it
+	check(below != null and below.host == press, "warehouse did not attach to the touching host")
+	var above := grid.place(Database.building(&"warehouse"), Vector2i(5, 4), 1)
+	var left := grid.place(Database.building(&"stamping_press"), Vector2i(4, 5), 0)
+	check(above.host == press and left.host == press, "second and third modules did not attach")
+	var extra := grid.place(Database.building(&"stamping_press"), Vector2i(7, 5), 0)
+	check(extra != null and extra.host == null, "module attached beyond the slot count")
+	grid.remove(below)
+	check(extra.host == press, "waiting module did not take the freed slot")
 	var housing := grid.place(Database.building(&"slum_stack"), Vector2i(12, 12), 0)
-	check(grid.check_placement(Database.building(&"storage_annex"), Vector2i(14, 12), 0)["host"] == null,
+	check(grid.check_placement(Database.building(&"warehouse"), Vector2i(14, 12), 0)["host"] == null,
 		"module would attach to housing")
 	check(housing.modules.is_empty(), "housing took a module")
+	check(grid.check_placement(Database.building(&"grinder_rig"), Vector2i(7, 5), 0)["host"] == null,
+		"a mine's drive module would attach to a casing press")
 
 
 func test_module_effects() -> void:
@@ -435,13 +488,13 @@ func test_module_effects() -> void:
 	var economy: Economy = w["economy"]
 	var furnace: BuildingInstance = w["furnace"]
 	var cap_before := furnace.capacity_for(&"iron_ore", 2)
-	var annex := grid.place(Database.building(&"storage_annex"), Vector2i(10, 7), 1)
-	check(annex != null and annex.host == furnace, "annex did not attach to the furnace")
+	var store := attach(grid, furnace, &"warehouse")
+	check(store != null and store.host == furnace, "warehouse did not attach to the furnace")
 	economy.step(Economy.STEP)
-	check(furnace.capacity_for(&"iron_ore", 2) == cap_before * 2, "storage annex did not double buffers")
+	check(furnace.capacity_for(&"iron_ore", 2) == cap_before * 2, "warehouse did not double buffers")
 	var mine: BuildingInstance = w["iron_mine"]
 	var req_before := int(Labour.job_requirements(mine)[&"menial"])
-	var bay := grid.place(Database.building(&"servitor_bay"), Vector2i(2, 7), 1)
+	var bay := attach(grid, mine, &"servitor_bay")
 	check(bay != null and bay.host == mine, "servitor bay did not attach to the mine")
 	var home: DistrictMap.District = w["home"]
 	home.add(&"machine_parts", 20)
@@ -455,7 +508,7 @@ func test_module_recipe_and_upkeep() -> void:
 	var economy: Economy = w["economy"]
 	var press := grid.place(Database.building(&"ration_press"), Vector2i(22, 11), 0)
 	check(not press.available_recipes().has(&"press_rations_direct"), "recipe available without module")
-	var mill := grid.place(Database.building(&"fungal_mill"), Vector2i(22, 12), 1)
+	var mill := attach(grid, press, &"fungal_mill")
 	check(mill != null and mill.host == press, "fungal mill did not attach")
 	check(press.available_recipes().has(&"press_rations_direct"), "module recipe not unlocked")
 	press.set_recipe(Database.recipe(&"press_rations_direct"))
@@ -463,7 +516,7 @@ func test_module_recipe_and_upkeep() -> void:
 	check(press.recipe.id == &"press_rations", "host kept a recipe its module took away")
 	# Upkeep: a machine-spirit shrine with no unguents switches off.
 	var furnace: BuildingInstance = w["furnace"]
-	var shrine := grid.place(Database.building(&"machine_spirit_shrine"), Vector2i(12, 8), 0)
+	var shrine := attach(grid, furnace, &"machine_spirit_shrine")
 	check(shrine != null and shrine.host == furnace, "machine-spirit shrine did not attach")
 	run(economy, 130.0)
 	check(not shrine.module_active, "unpaid module stayed active")
@@ -474,16 +527,116 @@ func test_tithe_first_cycle() -> void:
 	var w := flat_world()
 	var economy: Economy = w["economy"]
 	var home: DistrictMap.District = w["home"]
-	var tithe := TitheManager.new(economy, 1234)
-	check(tithe.cycle == 1, "tithe did not start at cycle 1")
+	var unlocks := Unlocks.new()
+	var tithe := TitheManager.new(economy, 1234, unlocks)
+	check(not tithe.founded and tithe.cycle == 0, "tithe started before the hive was founded")
+	tithe.advance(TitheManager.CYCLE_LENGTH * 3.0)
+	check(tithe.cycle == 0, "an unfounded hive was tithed")
+	tithe.found()
+	check(tithe.cycle == 1, "founding did not start cycle 1")
+	check(unlocks.charters == TitheManager.FOUNDING_CHARTERS, "founding did not grant a charter")
 	check(tithe.quota.keys() == [&"steel"], "first tithe should be steel only, got %s" % [tithe.quota])
 	check(economy.tithe_quota == tithe.quota, "economy does not know the quota")
 	home.add(&"steel", 10000)
 	var favour := tithe.favour
 	tithe.resolve()
 	check(tithe.favour > favour, "full delivery did not raise favour")
+	check(unlocks.charters == TitheManager.FOUNDING_CHARTERS + 2, "full delivery did not grant 2 charters")
+	check(TitheManager.charters_for(0.8) == 1 and TitheManager.charters_for(0.5) == 0, "charter scale wrong")
 	tithe.advance(TitheManager.CYCLE_LENGTH + 1.0)
 	check(tithe.cycle >= 2, "tithe did not roll over")
+
+
+func test_worker_scale() -> void:
+	var mine := Database.building(&"deep_ore_mine")
+	check(int(mine.workers[&"menial"]) == 150, "mine crew not scaled x5 (%s)" % [mine.workers])
+	var slum := Database.building(&"slum_stack")
+	check(slum.housing_capacity == 100, "housing capacity changed with the worker scale")
+	for b in Database.buildings.values():
+		if b.category in [&"extraction", &"industry", &"civic"]:
+			check(b.module_slots >= 3, "%s has fewer than 3 module slots" % b.id)
+			check(b.needs_drive(), "%s has no drive module" % b.id)
+			var dm := Database.building(b.drive_module)
+			check(dm != null and dm.accepts_host(b), "%s drive module does not fit it" % b.id)
+
+
+func test_drive_required() -> void:
+	var w := chain_world()
+	var grid: BuildGrid = w["grid"]
+	var economy: Economy = w["economy"]
+	var home: DistrictMap.District = w["home"]
+	home.add(&"iron_ore", 100)
+	home.add(&"coal", 100)
+	var bare := grid.place(Database.building(&"blast_furnace"), Vector2i(36, 8), 0)
+	economy.refresh_topology()
+	run(economy, 5.0)
+	check(bare.status == BuildingInstance.Status.NEEDS_MODULE, "furnace ran without a drive module (%s)" % bare.status_text())
+	check(Labour.job_requirements(bare).is_empty(), "idle furnace still hires workers")
+	check(is_zero_approx(bare.drive()), "drive not zero without modules")
+	var first := attach(grid, bare, &"bellows_house")
+	check(first != null and is_equal_approx(bare.drive(), 0.5), "one drive module should give 50%")
+	attach(grid, bare, &"bellows_house")
+	check(is_equal_approx(bare.drive(), 1.0), "two drive modules should give 100%")
+	check(not Labour.job_requirements(bare).is_empty(), "driven furnace hires nobody")
+
+
+func test_unlocks() -> void:
+	var u := Unlocks.new()
+	check(u.is_building_unlocked(&"slum_stack") and u.is_building_unlocked(&"deep_ore_mine"),
+		"founding buildings locked")
+	check(u.is_building_unlocked(&"grinder_rig"), "a founding building's drive module is locked")
+	check(not u.is_building_unlocked(&"plasteel_foundry"), "plasteel foundry unlocked at start")
+	check(not u.is_building_unlocked(&"ferrocrete_block"), "housing upgrade unlocked at start")
+	check(u.is_network_unlocked(TransportGrid.Net.ROAD) and not u.is_network_unlocked(TransportGrid.Net.RAIL),
+		"wrong networks at start")
+	var locked := 0
+	for b in Database.buildings.values():
+		if not u.is_building_unlocked(b.id):
+			locked += 1
+	check(locked > Database.buildings.size() / 2, "most buildings should start locked (%d locked)" % locked)
+	check(not u.buy(&"cargo_rail"), "bought a charter with none to spend")
+	u.award(1)
+	check(not u.buy(&"workshops"), "bought a charter without its prerequisite")
+	check(u.buy(&"cargo_rail") and u.charters == 0, "could not buy an affordable charter")
+	check(u.is_network_unlocked(TransportGrid.Net.RAIL) and u.is_building_unlocked(&"cargo_station"),
+		"cargo rail charter did not unlock rail")
+	check(not u.buy(&"cargo_rail"), "bought the same charter twice")
+
+
+func test_founding_threshold() -> void:
+	var w := flat_world(Vector2i(60, 60))
+	var grid: BuildGrid = w["grid"]
+	var economy: Economy = w["economy"]
+	var unlocks := Unlocks.new()
+	var tithe := TitheManager.new(economy, 99, unlocks)
+	var needed := ceili(TitheManager.FOUNDING_POPULATION / 100.0)
+	for i in needed - 1:
+		grid.place(Database.building(&"slum_stack"), Vector2i(2 + (i % 10) * 3, 2 + int(i / 10.0) * 3), 0)
+	economy.step(Economy.STEP)
+	tithe.advance(1.0)
+	check(not tithe.founded, "hive founded below the population threshold (%d)" % economy.total_population())
+	grid.place(Database.building(&"slum_stack"), Vector2i(2, 50), 0)
+	economy.step(Economy.STEP)
+	tithe.advance(1.0)
+	check(tithe.founded and tithe.cycle == 1, "hive not founded at %d citizens" % economy.total_population())
+
+
+func test_quota_only_producible() -> void:
+	var w := flat_world()
+	var unlocks := Unlocks.new()
+	var tithe := TitheManager.new(w["economy"], 5, unlocks)
+	for n in range(1, 9):
+		for item in tithe._make_quota(n):
+			check(unlocks.can_produce(item), "cycle %d asked for %s, which the hive cannot make" % [n, item])
+	unlocks.award(10)
+	unlocks.buy(&"hiver_quarters")
+	unlocks.buy(&"promethium")
+	check(unlocks.can_produce(&"promethium_fuel"), "promethium charter does not allow fuel")
+	var seen := {}
+	for n in range(2, 12):
+		for item in tithe._make_quota(n):
+			seen[item] = true
+	check(seen.has(&"promethium_fuel"), "newly producible tithe good never demanded")
 
 
 # --- World generation ---------------------------------------------------------

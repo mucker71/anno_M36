@@ -101,6 +101,9 @@ static func job_requirements(b: BuildingInstance) -> Dictionary:
 		return out
 	if b.def.is_module() and b.host == null:
 		return out
+	# A production building with no drive module can't run, so it hires nobody.
+	if b.def.needs_drive() and b.drive() <= 0.0:
+		return out
 	var mult := b.effect("workers")
 	for caste in b.def.workers:
 		out[caste] = maxi(1, int(round(int(b.def.workers[caste]) * mult)))

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"overclocking"
+display_name = "Overclocking"
+tier = 2
+cost = 2
+sort_order = 21
+prerequisites = Array[StringName]([&"power_cells"])
+buildings = Array[StringName]([&"overclock_coils"])
+networks = Array[StringName]([])
+description = "Coils that run industry faster and harder."

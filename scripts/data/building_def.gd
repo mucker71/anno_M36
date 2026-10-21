@@ -64,6 +64,9 @@ enum PortKind { INPUT, OUTPUT }
 @export var module_upkeep: Dictionary = {}
 ## For modules: extra recipes the host can select while attached.
 @export var module_recipes: Array[StringName] = []
+## For production buildings: the module it needs to run at all. Each attached
+## one adds its "drive" effect to the building's speed.
+@export var drive_module: StringName = &""
 
 @export_group("Visual")
 @export var colour: Color = Color.GRAY
@@ -84,6 +87,10 @@ func is_housing() -> bool:
 
 func is_module() -> bool:
 	return category == &"module"
+
+
+func needs_drive() -> bool:
+	return drive_module != &""
 
 
 func is_station() -> bool:

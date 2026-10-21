@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"mechanicus"
+display_name = "Mechanicus Enclave"
+tier = 3
+cost = 3
+sort_order = 25
+prerequisites = Array[StringName]([&"workshops", &"promethium"])
+buildings = Array[StringName]([&"forge_cloister", &"forge_sanctum", &"unguent_chapel", &"ceramite_kiln", &"machine_spirit_shrine", &"blessing_font", &"kiln_chamber"])
+networks = Array[StringName]([])
+description = "Adept housing, sacred unguents, ceramite and machine-spirit shrines."

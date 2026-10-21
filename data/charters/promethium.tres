@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"promethium"
+display_name = "Promethium Rights"
+tier = 1
+cost = 1
+sort_order = 8
+prerequisites = Array[StringName]([&"hiver_quarters"])
+buildings = Array[StringName]([&"promethium_derrick", &"promethium_refinery", &"pump_jack", &"fractionating_column"])
+networks = Array[StringName]([])
+description = "Pump and refine promethium, a tithe staple."

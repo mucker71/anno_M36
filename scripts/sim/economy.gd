@@ -262,6 +262,13 @@ func _reallocate() -> void:
 				employed[c] = int(employed.get(c, 0)) + int(b.workers_assigned.get(c, 0))
 
 
+func total_population() -> int:
+	var t := 0
+	for c in population:
+		t += int(population[c])
+	return t
+
+
 func _basic_sat(district_id: int, caste: StringName) -> float:
 	var d := district(district_id)
 	return float(d.basic_satisfaction.get(caste, 1.0)) if d else 0.0
@@ -386,11 +393,19 @@ func _step_building(b: BuildingInstance, dt: float, budget: Dictionary) -> void:
 		b.condition = minf(100.0, b.condition + REPAIR_AMOUNT)
 		consumed_total[&"machine_parts"] = int(consumed_total.get(&"machine_parts", 0)) + 1
 
+	# No drive module, no work: the building waits, and employs nobody.
+	var drive := b.drive()
+	if drive <= 0.0:
+		b.status = BuildingInstance.Status.NEEDS_MODULE
+		b.last_speed = 0.0
+		_push_outputs(b, d if trade else null, budget)
+		return
+
 	# Speed multiplier.
 	var staff := 1.0 if Labour.job_requirements(b).is_empty() else b.staffing
 	var cond := 1.0 if b.condition >= CONDITION_KNEE else lerpf(0.3, 1.0, b.condition / CONDITION_KNEE)
 	var prod := d.productivity if d else 1.0
-	var speed := staff * cond * prod * b.effect("speed")
+	var speed := staff * cond * prod * b.effect("speed") * drive
 	if r.is_extraction():
 		speed *= b.deposit_coverage
 	b.last_speed = speed

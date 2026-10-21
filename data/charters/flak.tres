@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"flak"
+display_name = "Flak Armour"
+tier = 2
+cost = 2
+sort_order = 15
+prerequisites = Array[StringName]([&"polymers"])
+buildings = Array[StringName]([&"flak_tailory", &"stitching_floor"])
+networks = Array[StringName]([])
+description = "Layered flak armour for the tithe."

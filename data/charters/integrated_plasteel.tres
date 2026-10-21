@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"integrated_plasteel"
+display_name = "Integrated Plasteel"
+tier = 3
+cost = 2
+sort_order = 26
+prerequisites = Array[StringName]([&"plasteel"])
+buildings = Array[StringName]([&"polymer_still"])
+networks = Array[StringName]([])
+description = "A still module that lets a plasteel foundry skip the polymer plant."

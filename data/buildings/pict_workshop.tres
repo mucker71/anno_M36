@@ -21,8 +21,8 @@ build_cost = {
 &"machine_parts": 5
 }
 workers = {
-&"hiver": 15,
-&"adept": 2
+&"hiver": 75,
+&"adept": 10
 }
 buffer_capacity = 8
 colour = Color(0.1647, 0.1647, 0.2902, 1)
@@ -36,10 +36,11 @@ decay_per_minute = 1.0
 service_kind = &""
 service_capacity = 0
 needs_deposit = false
-module_slots = 2
+module_slots = 4
 module_hosts = Array[StringName]([])
 module_effects = {}
 module_upkeep = {}
 module_recipes = Array[StringName]([])
 is_depot = false
 station_capacity = 0.0
+drive_module = &"tube_bench"

@@ -9,8 +9,8 @@ signal message_posted(text: String)
 @export var world_seed: int = 0
 
 const STARTING_STOCK := {
-	&"steel": 180, &"ferrocrete": 260, &"glass": 30, &"machine_parts": 25,
-	&"ration_bricks": 160, &"purified_water": 160, &"recaf": 20,
+	&"steel": 320, &"ferrocrete": 480, &"glass": 30, &"machine_parts": 40,
+	&"ration_bricks": 500, &"purified_water": 500,
 }
 const DEMOLISH_REFUND := 0.5
 const START_DISTRICT_SIZE := 40
@@ -23,6 +23,7 @@ var districts: DistrictMap
 var grid: BuildGrid
 var economy: Economy
 var tithe: TitheManager
+var unlocks: Unlocks
 var views: Dictionary = {}     # uid -> BuildingView
 ## 0 = paused, otherwise a multiplier on game time.
 var speed: float = 1.0
@@ -44,8 +45,8 @@ func _ready() -> void:
 	_setup_environment()
 	_setup_views()
 	_place_start()
-	post("Seed %d. Hive Secundus awaits the Administratum's demands." % seed_used)
-	_on_tithe_started(tithe.cycle, tithe.quota)
+	post("Seed %d. Found Hive Secundus: house %s citizens and the Administratum will recognise it." % [
+		seed_used, _thousands(TitheManager.FOUNDING_POPULATION)])
 
 
 func _process(delta: float) -> void:
@@ -82,6 +83,10 @@ func post(text: String) -> void:
 # --- Player actions -------------------------------------------------------------
 
 func try_build(def: BuildingDef, origin: Vector2i, rot: int) -> BuildingInstance:
+	if not unlocks.is_building_unlocked(def.id):
+		var c := unlocks.charter_for(def.id)
+		post("%s needs the %s charter." % [def.display_name, c.display_name if c else "right"])
+		return null
 	var check := grid.check_placement(def, origin, rot)
 	if not check["ok"]:
 		return null
@@ -105,6 +110,10 @@ func demolish(inst: BuildingInstance) -> void:
 func upgrade(inst: BuildingInstance) -> void:
 	var next := Database.building(inst.def.upgrade_to)
 	if next == null:
+		return
+	if not unlocks.is_building_unlocked(next.id):
+		var c := unlocks.charter_for(next.id)
+		post("Upgrading to %s needs the %s charter." % [next.display_name, c.display_name if c else "right"])
 		return
 	if not economy.pay(inst.def.upgrade_cost, inst.district_id):
 		post("Upgrading to %s needs %s." % [next.display_name, cost_text(inst.def.upgrade_cost)])
@@ -148,6 +157,9 @@ func plan_network(tiles: Array[Vector2i], net: int) -> Dictionary:
 
 
 func build_network(tiles: Array[Vector2i], net: int) -> int:
+	if not unlocks.is_network_unlocked(net):
+		post("%s needs the Cargo Rail charter." % TransportGrid.NET_NAMES[net])
+		return 0
 	var plan := plan_network(tiles, net)
 	var ok: Array = plan["ok_tiles"]
 	if ok.is_empty():
@@ -206,7 +218,9 @@ func _generate() -> void:
 	districts = DistrictMap.new(map_size)
 	grid = BuildGrid.new(terrain, deposits, transport, districts)
 	economy = Economy.new(grid, deposits)
-	tithe = TitheManager.new(economy, seed_used)
+	unlocks = Unlocks.new()
+	tithe = TitheManager.new(economy, seed_used, unlocks)
+	tithe.hive_founded.connect(_on_hive_founded)
 	tithe.cycle_resolved.connect(_on_tithe_resolved)
 	tithe.cycle_started.connect(_on_tithe_started)
 
@@ -319,13 +333,35 @@ func _on_tithe_started(cycle: int, quota: Dictionary) -> void:
 	post("Tithe %d demanded: %s. Deliver it to the Bastion Ward." % [cycle, cost_text(quota)])
 
 
-func _on_tithe_resolved(cycle: int, _delivered: Dictionary, _quota: Dictionary, ratio: float) -> void:
+func _on_hive_founded() -> void:
+	post("Hive Secundus is recognised by the Administratum. You are granted %d charter: spend it in the Charters tab." % TitheManager.FOUNDING_CHARTERS)
+
+
+func buy_charter(id: StringName) -> bool:
+	var c := Database.charter(id)
+	if c == null or not unlocks.buy(id):
+		return false
+	post("Charter granted: %s." % c.display_name)
+	return true
+
+
+static func _thousands(n: int) -> String:
+	var s := str(n)
+	var out := ""
+	while s.length() > 3:
+		out = "," + s.substr(s.length() - 3) + out
+		s = s.substr(0, s.length() - 3)
+	return s + out
+
+
+func _on_tithe_resolved(cycle: int, _delivered: Dictionary, _quota: Dictionary, ratio: float, earned: int = 0) -> void:
+	var reward := "" if earned <= 0 else " %d charter%s granted." % [earned, "" if earned == 1 else "s"]
 	if ratio >= 1.0:
-		post("Tithe %d delivered in full. The Imperium is pleased." % cycle)
+		post("Tithe %d delivered in full. The Imperium is pleased.%s" % [cycle, reward])
 	elif ratio >= 0.75:
-		post("Tithe %d delivered at %d%%. Noted." % [cycle, int(ratio * 100.0)])
+		post("Tithe %d delivered at %d%%. Noted.%s" % [cycle, int(ratio * 100.0), reward])
 	else:
-		post("Tithe %d short at %d%%. Imperial favour falls." % [cycle, int(ratio * 100.0)])
+		post("Tithe %d short at %d%%. Imperial favour falls, and no charters are granted." % [cycle, int(ratio * 100.0)])
 
 
 static func cost_text(d: Dictionary) -> String:

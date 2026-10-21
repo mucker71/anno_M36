@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"power_cells"
+display_name = "Power Cells"
+tier = 2
+cost = 2
+sort_order = 16
+prerequisites = Array[StringName]([&"workshops", &"promethium"])
+buildings = Array[StringName]([&"cell_plant", &"charge_rack"])
+networks = Array[StringName]([])
+description = "Charged cells for weapons, kits and coils."

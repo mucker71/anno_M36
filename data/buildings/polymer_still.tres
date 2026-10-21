@@ -36,3 +36,4 @@ module_upkeep = {}
 module_recipes = Array[StringName]([&"bond_plasteel_integrated"])
 is_depot = false
 station_capacity = 0.0
+drive_module = &""

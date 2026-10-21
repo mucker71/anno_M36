@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"scribes"
+display_name = "Scriptorium"
+tier = 2
+cost = 2
+sort_order = 17
+prerequisites = Array[StringName]([&"glass"])
+buildings = Array[StringName]([&"scribe_quarters"])
+networks = Array[StringName]([])
+description = "Housing for scribes, the clerical caste."

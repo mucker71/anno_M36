@@ -9,7 +9,7 @@ extends CanvasLayer
 const CATEGORIES := [
 	[&"transport", "Transport"], [&"extraction", "Extract"], [&"industry", "Industry"],
 	[&"module", "Modules"], [&"civic", "Civic"], [&"housing", "Housing"],
-	[&"service", "Services"], [&"districts", "Districts"],
+	[&"service", "Services"], [&"districts", "Districts"], [&"charters", "Charters"],
 ]
 const TEXT := Color(0.86, 0.80, 0.66)
 const TEXT_DIM := Color(0.55, 0.51, 0.44)
@@ -35,6 +35,8 @@ var _recipe_select: OptionButton
 var _recipe_ids: Array[StringName] = []
 var _upgrade_button: Button
 var _demolish_button: Button
+var _module_button: Button
+var _deposit: int = -1
 var _hint: Label
 var _log: VBoxContainer
 var _selected: BuildingInstance
@@ -55,6 +57,8 @@ func setup(p_world: World) -> void:
 	_build_hint_and_log(root)
 	world.placement.selection_changed.connect(_on_selection_changed)
 	world.placement.district_selected.connect(_on_district_selected)
+	world.placement.deposit_selected.connect(_on_deposit_selected)
+	world.unlocks.changed.connect(_on_unlocks_changed)
 	world.placement.mode_changed.connect(func(_m): refresh())
 	world.message_posted.connect(post_message)
 	world.districts.changed.connect(_on_districts_changed)
@@ -140,8 +144,13 @@ func _show_category(cat: StringName) -> void:
 	if cat == &"districts":
 		_fill_district_tools()
 		return
+	if cat == &"charters":
+		_fill_charters()
+		return
 	if cat == &"transport":
 		for net in [TransportGrid.Net.WALK, TransportGrid.Net.ROAD, TransportGrid.Net.RAIL]:
+			if not world.unlocks.is_network_unlocked(net):
+				continue
 			var tip: String = {
 				TransportGrid.Net.WALK: "People only. Workers walk to jobs and citizens to their depot.",
 				TransportGrid.Net.ROAD: "Haulers move goods between buildings and the district depot. People can walk on roads too.",
@@ -151,10 +160,80 @@ func _show_category(cat: StringName) -> void:
 				tip + "\nClick and drag to lay a line.", world.placement.begin_network.bind(net))
 		_add_tool("Bulldoze transport", "Drag a rectangle to clear walkways, roads and rail. Half the cost is refunded.",
 			world.placement.begin_bulldoze)
+	var locked := 0
 	for def in Database.sorted_buildings():
 		if def.category != cat or _is_upgrade_target(def):
 			continue
+		if not world.unlocks.is_building_unlocked(def.id):
+			locked += 1
+			continue
 		_add_tool(def.display_name, _building_tooltip(def), world.placement.begin_build.bind(def))
+	if locked > 0:
+		var note := Label.new()
+		note.text = "%d more need charters (see the Charters tab)." % locked
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		note.add_theme_color_override("font_color", TEXT_DIM)
+		_build_list.add_child(note)
+
+
+func _fill_charters() -> void:
+	var u := world.unlocks
+	var head := Label.new()
+	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	head.add_theme_color_override("font_color", BRASS.lightened(0.3))
+	if world.tithe.founded:
+		head.text = "%d charter%s to spend. Tithes grant 2 for full delivery, 1 for 75%%+." % [
+			u.charters, "" if u.charters == 1 else "s"]
+	else:
+		head.text = "No charters yet. The hive is granted its first when it houses %s citizens; each tithe after that grants more." % World._thousands(TitheManager.FOUNDING_POPULATION)
+	_build_list.add_child(head)
+	var tier := -1
+	for c: CharterDef in Database.sorted_charters():
+		if c.tier == 0:
+			continue
+		if c.tier != tier:
+			tier = c.tier
+			var t := Label.new()
+			t.text = "Tier %d" % tier
+			t.add_theme_color_override("font_color", BRASS)
+			_build_list.add_child(t)
+		var reason := u.block_reason(c)
+		var owned := u.is_owned(c.id)
+		var label := ("Granted: " if owned else "") + "%s  (%d)" % [c.display_name, c.cost]
+		var b := _add_tool(label, _charter_tooltip(c, reason), _on_charter_pressed.bind(c.id))
+		b.disabled = reason != ""
+		if owned:
+			b.add_theme_color_override("font_disabled_color", GOOD)
+		elif reason != "" and not reason.begins_with("Needs %d" % c.cost):
+			b.add_theme_color_override("font_disabled_color", TEXT_DIM)
+
+
+func _charter_tooltip(c: CharterDef, reason: String) -> String:
+	var lines := [c.display_name, c.description, "Cost: %d charter%s" % [c.cost, "" if c.cost == 1 else "s"]]
+	if not c.prerequisites.is_empty():
+		var names := []
+		for p in c.prerequisites:
+			names.append(Database.charter(p).display_name)
+		lines.append("Requires: " + ", ".join(names))
+	var names := []
+	for b in c.buildings:
+		var def := Database.building(b)
+		if def and not (def.is_module() and def.module_effects.has("drive")):
+			names.append(def.display_name)
+	lines.append("Unlocks: " + ", ".join(names))
+	if c.networks.has(&"rail"):
+		lines.append("Unlocks cargo rail track")
+	if reason != "" and reason != "Owned":
+		lines.append(reason)
+	return "\n".join(lines)
+
+
+func _on_charter_pressed(id: StringName) -> void:
+	world.buy_charter(id)
+
+
+func _on_unlocks_changed() -> void:
+	_show_category(_category)
 
 
 func _fill_district_tools() -> void:
@@ -262,6 +341,9 @@ func _build_inspector(root: Control) -> void:
 	_demolish_button.text = "Demolish (Del)"
 	_demolish_button.pressed.connect(_on_demolish_pressed)
 	buttons.add_child(_demolish_button)
+	_module_button = Button.new()
+	_module_button.pressed.connect(_on_module_pressed)
+	buttons.add_child(_module_button)
 
 
 func _build_hint_and_log(root: Control) -> void:
@@ -295,12 +377,20 @@ func _build_hint_and_log(root: Control) -> void:
 func _refresh_top() -> void:
 	var t := world.tithe
 	var e := world.economy
+	if not t.founded:
+		_top_tithe.text = "Founding Hive Secundus  ·  population %s / %s  ·  the Administratum levies its first tithe once the hive is recognised" % [
+			World._thousands(e.total_population()), World._thousands(TitheManager.FOUNDING_POPULATION)]
+		_refresh_status_line(e)
+		return
 	var parts := []
 	for item in t.quota:
 		parts.append("%s %d/%d" % [Database.item_name(item), e.district_amount(e.bastion_district, item), int(t.quota[item])])
-	_top_tithe.text = "Imperial Tithe %d  ·  due in %s  ·  %s (in Bastion Ward)  ·  Favour %d" % [
-		t.cycle, _clock(t.time_left), ",  ".join(parts), int(t.favour)]
+	_top_tithe.text = "Imperial Tithe %d  ·  due in %s  ·  %s (in Bastion Ward)  ·  Favour %d  ·  Charters %d" % [
+		t.cycle, _clock(t.time_left), ",  ".join(parts), int(t.favour), world.unlocks.charters]
+	_refresh_status_line(e)
 
+
+func _refresh_status_line(e: Economy) -> void:
 	var pops := []
 	for caste in Database.sorted_castes():
 		var pop := int(e.population.get(caste.id, 0))
@@ -330,6 +420,8 @@ func _refresh_inspector() -> void:
 		_selected = null
 	if _selected:
 		_inspect_building(_selected)
+	elif _deposit >= 0 and world.deposits.get_cluster(_deposit):
+		_inspect_deposit(world.deposits.get_cluster(_deposit))
 	elif _district >= 0 and world.districts.get_district(_district):
 		_inspect_district(world.districts.get_district(_district))
 	else:
@@ -355,7 +447,20 @@ func _inspect_building(b: BuildingInstance) -> void:
 				int(float(dist.comfort_satisfaction.get(d.housing_caste, 0.0)) * 100.0)])
 		if d.upgrade_to != &"":
 			var up := Database.building(d.upgrade_to)
-			lines.append("Upgrade to %s (%d): %s" % [up.display_name, up.housing_capacity, _cost_text(d.upgrade_cost)])
+			if world.unlocks.is_building_unlocked(up.id):
+				lines.append("Upgrade to %s (%d): %s" % [up.display_name, up.housing_capacity, _cost_text(d.upgrade_cost)])
+			else:
+				var ch := world.unlocks.charter_for(up.id)
+				lines.append("Upgrade to %s needs the %s charter" % [up.display_name, ch.display_name if ch else "right"])
+	if d.needs_drive():
+		var dm := Database.building(d.drive_module)
+		var n := b.drive_count()
+		if n == 0:
+			lines.append("Needs a %s to run: each adds %d%% speed, two run it at full rate." % [
+				dm.display_name, int(float(dm.module_effects.get("drive", 0.5)) * 100.0)])
+		else:
+			lines.append("Driven by %d %s%s: %d%% speed before staffing and condition" % [
+				n, dm.display_name, "" if n == 1 else "s", int(b.drive() * 100.0)])
 	if d.is_module():
 		lines.append("Attached to: %s" % (b.host.def.display_name if b.host else "nothing"))
 		if not d.module_effects.is_empty():
@@ -383,9 +488,16 @@ func _inspect_building(b: BuildingInstance) -> void:
 				names.append(l.def.display_name)
 			lines.append("Direct link to: " + ", ".join(names))
 	if d.module_slots > 0:
-		var mods := []
+		var counts := {}
+		var order := []
 		for m in b.modules:
-			mods.append(m.def.display_name + ("" if m.module_active else " (off)"))
+			var key := m.def.display_name + ("" if m.module_active else " (off)")
+			if not counts.has(key):
+				order.append(key)
+			counts[key] = int(counts.get(key, 0)) + 1
+		var mods := []
+		for key in order:
+			mods.append(key if counts[key] == 1 else "%s x%d" % [key, counts[key]])
 		lines.append("Modules %d/%d: %s" % [b.modules.size(), d.module_slots, ", ".join(mods) if not mods.is_empty() else "none"])
 	if b.deposit_cluster >= 0:
 		var cl := world.deposits.get_cluster(b.deposit_cluster)
@@ -407,6 +519,49 @@ func _inspect_building(b: BuildingInstance) -> void:
 	_upgrade_button.visible = d.upgrade_to != &""
 	_demolish_button.visible = true
 	_demolish_button.disabled = d.category == &"core"
+	_module_button.visible = d.needs_drive() and b.free_module_slots() > 0
+	if _module_button.visible:
+		_module_button.text = "Add %s" % Database.building(d.drive_module).display_name
+
+
+func _inspect_deposit(cl: DepositMap.Cluster) -> void:
+	_inspect_panel.visible = true
+	_recipe_select.visible = false
+	_upgrade_button.visible = false
+	_demolish_button.visible = false
+	_module_button.visible = false
+	var item := Database.item(cl.item)
+	var district := world.districts.at(cl.cells[0])
+	_inspect_title.text = "%s deposit  ·  %s" % [item.display_name if item else String(cl.item),
+		district.name if district else "outside any district"]
+	if item:
+		_inspect_title.add_theme_color_override("font_color", item.colour.lightened(0.35))
+	var lines := []
+	if item:
+		lines.append(item.description)
+	lines.append("%s of %s left (%d%%)  ·  %d tiles" % [World._thousands(cl.remaining),
+		World._thousands(cl.initial), int(cl.fraction_left() * 100.0), cl.cells.size()])
+	var miners := []
+	for def in Database.sorted_buildings():
+		if not def.needs_deposit:
+			continue
+		for rid in def.recipes:
+			var r := Database.recipe(rid)
+			if r and r.deposit == cl.item:
+				var dm := Database.building(def.drive_module)
+				var tag := "" if world.unlocks.is_building_unlocked(def.id) else " (needs a charter)"
+				miners.append("%s with %s modules%s" % [def.display_name, dm.display_name if dm else "drive", tag])
+	if not miners.is_empty():
+		lines.append("Worked by: " + ", ".join(miners))
+	var working := 0
+	for b in world.grid.buildings:
+		if b.deposit_cluster == cl.id:
+			working += 1
+	lines.append("%d building%s drawing from it." % [working, "" if working == 1 else "s"] if working > 0
+		else "Nothing is mining it yet. Output scales with how much of a mine's footprint covers the deposit.")
+	if cl.remaining <= 0:
+		lines.append("Exhausted.")
+	_inspect_body.text = "\n".join(lines)
 
 
 func _inspect_district(d: DistrictMap.District) -> void:
@@ -414,6 +569,7 @@ func _inspect_district(d: DistrictMap.District) -> void:
 	_recipe_select.visible = false
 	_upgrade_button.visible = false
 	_demolish_button.visible = false
+	_module_button.visible = false
 	_inspect_title.text = d.name
 	_inspect_title.add_theme_color_override("font_color", d.colour.lightened(0.2))
 	var lines := []
@@ -491,6 +647,7 @@ func _on_selection_changed(inst: BuildingInstance) -> void:
 	_selected = inst
 	if inst:
 		_district = -1
+		_deposit = -1
 	_inspect_title.remove_theme_color_override("font_color")
 	_inspect_title.add_theme_color_override("font_color", BRASS.lightened(0.3))
 	_recipe_select.clear()
@@ -511,8 +668,23 @@ func _on_selection_changed(inst: BuildingInstance) -> void:
 
 func _on_district_selected(id: int) -> void:
 	_district = id
+	_deposit = -1
 	_selected = null
 	refresh()
+
+
+func _on_deposit_selected(id: int) -> void:
+	_deposit = id
+	_district = -1
+	_selected = null
+	refresh()
+
+
+func _on_module_pressed() -> void:
+	if _selected and _selected.def.needs_drive():
+		var def := Database.building(_selected.def.drive_module)
+		if world.unlocks.is_building_unlocked(def.id):
+			world.placement.begin_build(def)
 
 
 func _on_districts_changed() -> void:
@@ -559,6 +731,10 @@ func _building_tooltip(def: BuildingDef) -> String:
 	if def.description != "":
 		lines.append(def.description)
 	lines.append("Cost: " + _cost_text(def.build_cost))
+	if def.needs_drive():
+		var dm := Database.building(def.drive_module)
+		lines.append("Needs %s modules beside it to run (each +%d%% speed, two for full rate)" % [
+			dm.display_name, int(float(dm.module_effects.get("drive", 0.5)) * 100.0)])
 	if not def.workers.is_empty():
 		lines.append("Workers: " + _castes_text(def.workers))
 	if def.is_housing():
@@ -589,7 +765,10 @@ func _building_tooltip(def: BuildingDef) -> String:
 func _effects_text(effects: Dictionary) -> String:
 	var parts := []
 	for k in effects:
-		parts.append("%s x%s" % [String(k), str(snappedf(float(effects[k]), 0.01))])
+		if String(k) == "drive":
+			parts.append("+%d%% host speed" % int(float(effects[k]) * 100.0))
+		else:
+			parts.append("%s x%s" % [String(k), str(snappedf(float(effects[k]), 0.01))])
 	return ", ".join(parts)
 
 

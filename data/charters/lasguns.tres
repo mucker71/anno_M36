@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"lasguns"
+display_name = "Lasgun Pattern"
+tier = 3
+cost = 3
+sort_order = 24
+prerequisites = Array[StringName]([&"power_cells", &"plasteel"])
+buildings = Array[StringName]([&"crystal_grinder", &"power_pack_line", &"lasgun_manufactorum", &"lapping_wheel", &"cell_filler", &"assembly_line"])
+networks = Array[StringName]([])
+description = "Lasguns and power packs, the heart of the tithe."

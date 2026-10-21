@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"bonding_press"
+display_name = "Bonding Press"
+category = &"module"
+sort_order = 75
+description = "Presses polymer into the hot steel. Required by the Plasteel Foundry: each one adds 50% speed, two run it at full rate."
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+ports = []
+recipes = Array[StringName]([])
+build_cost = {
+&"steel": 13,
+&"ferrocrete": 6,
+&"machine_parts": 1
+}
+workers = {}
+buffer_capacity = 8
+colour = Color(0.4510, 0.4784, 0.4980, 1)
+height = 1.43
+housing_caste = &""
+housing_capacity = 0
+upgrade_to = &""
+upgrade_cost = {}
+logistics_capacity = 0.0
+decay_per_minute = 0.0
+service_kind = &""
+service_capacity = 0
+needs_deposit = false
+module_slots = 0
+module_hosts = Array[StringName]([&"plasteel_foundry"])
+module_effects = {
+&"drive": 0.5
+}
+module_upkeep = {}
+module_recipes = Array[StringName]([])
+is_depot = false
+station_capacity = 0.0
+drive_module = &""

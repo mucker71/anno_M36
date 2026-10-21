@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"cogitators"
+display_name = "Cogitator Engines"
+tier = 3
+cost = 3
+sort_order = 23
+prerequisites = Array[StringName]([&"glass", &"workshops", &"scribes"])
+buildings = Array[StringName]([&"cogitator_lab", &"pict_workshop", &"etching_bath", &"tube_bench"])
+networks = Array[StringName]([])
+description = "Logic boards, and the pict screens built from them."

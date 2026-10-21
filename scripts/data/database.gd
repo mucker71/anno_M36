@@ -6,11 +6,13 @@ const ITEMS_DIR := "res://data/items"
 const RECIPES_DIR := "res://data/recipes"
 const BUILDINGS_DIR := "res://data/buildings"
 const CASTES_DIR := "res://data/castes"
+const CHARTERS_DIR := "res://data/charters"
 
 var items: Dictionary = {}       # StringName -> ItemDef
 var recipes: Dictionary = {}     # StringName -> RecipeDef
 var buildings: Dictionary = {}   # StringName -> BuildingDef
 var castes: Dictionary = {}      # StringName -> CasteDef
+var charters: Dictionary = {}    # StringName -> CharterDef
 
 
 func _ready() -> void:
@@ -22,6 +24,7 @@ func reload() -> void:
 	recipes = _load_dir(RECIPES_DIR)
 	buildings = _load_dir(BUILDINGS_DIR)
 	castes = _load_dir(CASTES_DIR)
+	charters = _load_dir(CHARTERS_DIR)
 
 
 func item(id: StringName) -> ItemDef:
@@ -38,6 +41,16 @@ func building(id: StringName) -> BuildingDef:
 
 func caste(id: StringName) -> CasteDef:
 	return castes.get(id)
+
+
+func charter(id: StringName) -> CharterDef:
+	return charters.get(id)
+
+
+func sorted_charters() -> Array:
+	var list := charters.values()
+	list.sort_custom(func(a, b): return a.sort_order < b.sort_order)
+	return list
 
 
 func sorted_items() -> Array:

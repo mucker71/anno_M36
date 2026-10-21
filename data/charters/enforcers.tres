@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"enforcers"
+display_name = "Arbites Mandate"
+tier = 3
+cost = 3
+sort_order = 22
+prerequisites = Array[StringName]([&"power_cells"])
+buildings = Array[StringName]([&"enforcer_armoury", &"enforcer_precinct", &"armourers_bench"])
+networks = Array[StringName]([])
+description = "Enforcer precincts and the armouries that kit them: the Order lever."

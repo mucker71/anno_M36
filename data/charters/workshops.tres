@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"workshops"
+display_name = "Workshops"
+tier = 1
+cost = 1
+sort_order = 7
+prerequisites = Array[StringName]([&"hiver_quarters"])
+buildings = Array[StringName]([&"machine_shop", &"wire_drawer", &"lathe_bay", &"drawing_bench"])
+networks = Array[StringName]([])
+description = "Machine parts for repairs, and copper wire."

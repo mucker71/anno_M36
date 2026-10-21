@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"hiver_quarters"
+display_name = "Hiver Quarters"
+tier = 1
+cost = 1
+sort_order = 5
+prerequisites = Array[StringName]([])
+buildings = Array[StringName]([&"hiver_tenement"])
+networks = Array[StringName]([])
+description = "Housing for hivers, the skilled caste most factories need."

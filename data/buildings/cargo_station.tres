@@ -38,3 +38,4 @@ module_upkeep = {}
 module_recipes = Array[StringName]([])
 is_depot = false
 station_capacity = 12.0
+drive_module = &""

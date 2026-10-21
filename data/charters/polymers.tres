@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"polymers"
+display_name = "Polymer Chemistry"
+tier = 2
+cost = 2
+sort_order = 10
+prerequisites = Array[StringName]([&"promethium"])
+buildings = Array[StringName]([&"polymer_plant", &"reactor_vessel"])
+networks = Array[StringName]([])
+description = "Plastics from promethium and coal."

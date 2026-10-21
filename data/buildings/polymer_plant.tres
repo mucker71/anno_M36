@@ -20,7 +20,7 @@ build_cost = {
 &"ferrocrete": 10
 }
 workers = {
-&"hiver": 20
+&"hiver": 100
 }
 buffer_capacity = 8
 colour = Color(0.2275, 0.2902, 0.4157, 1)
@@ -34,10 +34,11 @@ decay_per_minute = 1.0
 service_kind = &""
 service_capacity = 0
 needs_deposit = false
-module_slots = 2
+module_slots = 4
 module_hosts = Array[StringName]([])
 module_effects = {}
 module_upkeep = {}
 module_recipes = Array[StringName]([])
 is_depot = false
 station_capacity = 0.0
+drive_module = &"reactor_vessel"

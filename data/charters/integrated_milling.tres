@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"integrated_milling"
+display_name = "Integrated Milling"
+tier = 2
+cost = 1
+sort_order = 9
+prerequisites = Array[StringName]([])
+buildings = Array[StringName]([&"fungal_mill"])
+networks = Array[StringName]([])
+description = "A mill module that lets a ration press work raw biomass."

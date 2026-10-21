@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/charter_def.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"plasteel"
+display_name = "Plasteel Foundries"
+tier = 2
+cost = 2
+sort_order = 11
+prerequisites = Array[StringName]([&"polymers", &"ferrocrete_housing"])
+buildings = Array[StringName]([&"plasteel_foundry", &"hab_stack", &"bonding_press"])
+networks = Array[StringName]([])
+description = "Plasteel, a tithe good, and the hab stacks built from it."
